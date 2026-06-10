@@ -67,6 +67,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .bsend{width:38px;height:38px;background:var(--green);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .bsend:hover{background:var(--green-dark)}
 .bsend svg{width:17px;height:17px;fill:#fff}
+.battach{width:34px;height:34px;background:var(--bg-input);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:var(--muted);transition:all .2s}
+.battach:hover{border-color:var(--green);color:var(--green)}
+.media-prev{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;margin:4px 13px 0}
+.media-prev-info{flex:1;min-width:0}
+.media-prev-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-prev-size{font-size:10px;color:var(--muted)}
+.media-prev-cancel{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:18px;flex-shrink:0;line-height:1;padding:0}
+.msg-img{max-width:100%;border-radius:7px;display:block;cursor:pointer;margin-bottom:2px}
+.msg-audio{width:220px;height:36px;margin-bottom:2px;display:block}
+.msg-video{max-width:100%;border-radius:7px;display:block;margin-bottom:2px;max-height:260px}
+.msg-doc{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border-radius:7px;padding:7px 10px;margin-bottom:2px;text-decoration:none;color:var(--text)}
+.msg-doc span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .panel-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .panel-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-panel);flex-shrink:0}
 .panel-toolbar strong{font-size:13px}
@@ -202,7 +214,17 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         </select>
       </div>
       <div class="msgs" id="msgsDiv"></div>
+      <div id="mediaPrev" style="display:none" class="media-prev">
+        <span id="mediaPrevIcon" style="font-size:20px">📎</span>
+        <div class="media-prev-info">
+          <div class="media-prev-name" id="mediaPrevName">arquivo</div>
+          <div class="media-prev-size" id="mediaPrevSize"></div>
+        </div>
+        <button class="media-prev-cancel" onclick="cancelMedia()">✕</button>
+      </div>
       <div class="iarea">
+        <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.pdf,.doc,.docx" style="display:none" onchange="onFileSelected(event)">
+        <button class="battach" onclick="document.getElementById('fileInput').click()" title="Enviar arquivo">📎</button>
         <textarea id="msgIn" placeholder="Digite uma mensagem…" rows="1"
           onkeydown="handleKey(event)" oninput="rsz(this)"></textarea>
         <button class="bsend" onclick="sendMsg()">
@@ -656,13 +678,14 @@ function bubble(m) {
   let mediaHtml = '';
   if (m.media_url) {
     if (m.media_type === 'image') {
-      mediaHtml = '<a href="' + m.media_url + '" target="_blank"><img src="' + m.media_url + '" style="max-width:100%;border-radius:7px;margin-bottom:4px;display:block"></a>';
+      mediaHtml = '<a href="' + m.media_url + '" target="_blank"><img class="msg-img" src="' + m.media_url + '" loading="lazy"></a>';
     } else if (m.media_type === 'audio') {
-      mediaHtml = '<audio controls src="' + m.media_url + '" style="max-width:240px;margin-bottom:4px;display:block"></audio>';
+      mediaHtml = '<audio class="msg-audio" controls controlsList="nodownload" src="' + m.media_url + '"></audio>';
     } else if (m.media_type === 'video') {
-      mediaHtml = '<video controls src="' + m.media_url + '" style="max-width:100%;border-radius:7px;margin-bottom:4px;display:block"></video>';
+      mediaHtml = '<video class="msg-video" controls src="' + m.media_url + '"></video>';
     } else {
-      mediaHtml = '<a href="' + m.media_url + '" target="_blank" style="color:#5bc8f5;font-size:12px;display:block;margin-bottom:4px">📄 Abrir arquivo</a>';
+      const fname = m.media_url.split('/').pop() || 'arquivo';
+      mediaHtml = '<a class="msg-doc" href="' + m.media_url + '" target="_blank"><span style="font-size:22px">📄</span><span>' + esc(fname) + '</span></a>';
     }
   }
   let btnsHtml = '';
@@ -671,42 +694,106 @@ function bubble(m) {
     m.buttons.forEach(function(b) { btnsHtml += '<div class="btn-preview">🔘 ' + esc(b.title) + '</div>'; });
     btnsHtml += '</div>';
   }
-  return '<div class="mg ' + dir + '"><div class="mb">' + mediaHtml + esc(m.text || '') + tag + btnsHtml + '<span class="mt">' + t + '</span></div></div>';
+  const textPart = (m.text && m.text.trim()) ? esc(m.text) : '';
+  return '<div class="mg ' + dir + '"><div class="mb">' + mediaHtml + textPart + tag + btnsHtml + '<span class="mt">' + t + '</span></div></div>';
+}
+
+// ── MÍDIA ─────────────────────────────────────────────────────
+let selectedFile = null;
+const SUPA_URL = 'https://ojgcddedmvuzealgbplq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60';
+
+function onFileSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  selectedFile = file;
+  const icons = { image: '🖼️', audio: '🎤', video: '🎥' };
+  const mcat = file.type.split('/')[0];
+  document.getElementById('mediaPrevIcon').textContent = icons[mcat] || '📄';
+  document.getElementById('mediaPrevName').textContent = file.name;
+  document.getElementById('mediaPrevSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('mediaPrev').style.display = 'flex';
+  e.target.value = '';
+}
+
+function cancelMedia() {
+  selectedFile = null;
+  document.getElementById('mediaPrev').style.display = 'none';
+}
+
+async function uploadMedia(file) {
+  const mcat = file.type.split('/')[0];
+  const ext = file.name.split('.').pop() || 'bin';
+  const fileName = curPhone + '_' + Date.now() + '.' + ext;
+  const buf = await file.arrayBuffer();
+  const resp = await fetch(SUPA_URL + '/storage/v1/object/whatsapp/' + fileName, {
+    method: 'POST',
+    headers: {
+      apikey: SUPA_KEY,
+      Authorization: 'Bearer ' + SUPA_KEY,
+      'Content-Type': file.type
+    },
+    body: buf
+  });
+  if (!resp.ok) return null;
+  return {
+    url: SUPA_URL + '/storage/v1/object/public/whatsapp/' + fileName,
+    type: mcat,
+    mime: file.type,
+    name: file.name
+  };
 }
 
 async function sendMsg() {
   if (!curPhone) { showToast('Selecione um contato'); return; }
   const inp = document.getElementById('msgIn');
   const text = inp.value.trim();
-  if (!text) return;
-  inp.value = ''; rsz(inp);
+  if (!text && !selectedFile) return;
+
   const numId = document.getElementById('numeroSelect').value;
   const num = numeros.find(function(n) { return n.id === numId; });
-  const r1 = await db.from('whatsapp_messages').insert({ phone: curPhone, text: text, direction: 'out', auto: false });
-  if (r1.error) { showToast('❌ Erro ao salvar msg: ' + r1.error.message); return; }
-  const r2 = await db.from('whatsapp_contacts').upsert({
-    phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
-    last_msg: '✓ ' + text, last_time: Date.now(), unread: 0, numero_id: numId || null
-  }, { onConflict: 'phone' });
-  if (r2.error) {
-    // fallback sem numero_id (caso a coluna não exista no banco)
-    const r3 = await db.from('whatsapp_contacts').upsert({
-      phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
-      last_msg: '✓ ' + text, last_time: Date.now(), unread: 0
-    }, { onConflict: 'phone' });
-    if (r3.error) showToast('❌ Erro contato: ' + r3.error.message);
+
+  // Upload de mídia se houver arquivo selecionado
+  let media_url = null, media_type = null;
+  if (selectedFile) {
+    showToast('⏳ Enviando arquivo...');
+    const uploaded = await uploadMedia(selectedFile);
+    if (!uploaded) { showToast('❌ Falha no upload do arquivo'); return; }
+    media_url = uploaded.url;
+    media_type = uploaded.type;
+    cancelMedia();
   }
+
+  inp.value = ''; rsz(inp);
+
+  // Salvar no Supabase
+  const msgData = { phone: curPhone, text: text || '', direction: 'out', auto: false };
+  if (media_url) { msgData.media_url = media_url; msgData.media_type = media_type; }
+  const r1 = await db.from('whatsapp_messages').insert(msgData);
+  if (r1.error) { showToast('❌ Erro ao salvar: ' + r1.error.message); return; }
+
+  const lastLabel = media_type
+    ? ({ image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo' }[media_type] || '📄 Arquivo')
+    : ('✓ ' + text);
+
+  await db.from('whatsapp_contacts').upsert({
+    phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
+    last_msg: lastLabel, last_time: Date.now(), unread: 0
+  }, { onConflict: 'phone' });
   loadContacts();
+
+  // Enviar para n8n → WhatsApp
   if (cfg.webhook) {
     try {
       const h = { 'Content-Type': 'application/json' };
       if (cfg.token) h['Authorization'] = cfg.token;
       await fetch(cfg.webhook, { method: 'POST', headers: h, body: JSON.stringify({
-        phone: curPhone, message: text, type: 'manual',
+        phone: curPhone, message: text || '', type: 'manual',
+        media_url: media_url, media_type: media_type,
         phoneNumberId: num ? num.phone_number_id : null,
         accessToken:   num ? num.access_token    : null
       })});
-    } catch (e) { showToast('⚠️ n8n offline — msg salva no Supabase'); }
+    } catch (e) { showToast('⚠️ n8n offline — msg salva'); }
   } else {
     showToast('⚠️ Configure o webhook do n8n em ⚙️');
   }
