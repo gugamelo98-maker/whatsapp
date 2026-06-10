@@ -11,10 +11,11 @@
   --green:#25D366;--green-dark:#128C7E;
   --bg:#111B21;--bg-panel:#202C33;--bg-chat:#0B141A;
   --bg-input:#2A3942;--msg-in:#202C33;--msg-out:#005C4B;
-  --text:#E9EDEF;--muted:#8696A0;--border:#2A3942;
-  --orange:#FF6B35;
+  --text:#E9EDEF;--muted:#8696A0;--border:#2A3942;--orange:#FF6B35;
 }
 body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
 .topbar{background:var(--bg-panel);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .tl{display:flex;align-items:center;gap:10px}
 .logo{width:34px;height:34px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:17px}
@@ -26,7 +27,11 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .tab.active{background:var(--bg-input);color:var(--text);border-color:var(--border)}
 .tab:hover:not(.active){color:var(--text)}
 .btn-icon{background:var(--bg-input);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px}
+
+/* MAIN */
 .main{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
 .sidebar{width:285px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
 .sh{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .sh strong{font-size:12px}.sh span{font-size:11px;color:var(--muted)}
@@ -44,14 +49,18 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ctime{font-size:10px;color:var(--muted)}
 .badge{background:var(--green);color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 5px}
 .empty{padding:28px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+
+/* CHAT */
 .chat-area{flex:1;display:flex;flex-direction:column;background:var(--bg-chat);overflow:hidden}
 .no-chat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:8px}
 .no-chat-icon{font-size:42px;opacity:.2}
 .ch{background:var(--bg-panel);padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0}
 .ch-info{flex:1}.ch-name{font-size:13px;font-weight:600}.ch-num{font-size:11px;color:var(--muted)}
 .msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+
+/* BUBBLES */
 .mg{display:flex;flex-direction:column;margin-bottom:2px}
-.mb{max-width:66%;padding:6px 11px 17px;border-radius:8px;font-size:13px;line-height:1.5;position:relative;word-wrap:break-word}
+.mb{max-width:66%;padding:6px 11px 18px;border-radius:8px;font-size:13px;line-height:1.5;position:relative;word-wrap:break-word}
 .min .mb{background:var(--msg-in);border-top-left-radius:0;align-self:flex-start}
 .mout .mb{background:var(--msg-out);border-top-right-radius:0;align-self:flex-end}
 .mout{align-items:flex-end}.min{align-items:flex-start}
@@ -61,24 +70,30 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-preview{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;color:#5bc8f5;text-align:center}
 .ddiv{text-align:center;color:var(--muted);font-size:11px;margin:8px 0;display:flex;align-items:center;gap:7px}
 .ddiv::before,.ddiv::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* MÍDIA NAS MENSAGENS */
+.msg-img{max-width:100%;max-height:280px;border-radius:7px;display:block;cursor:pointer;margin-bottom:2px;object-fit:cover}
+.msg-audio{width:220px;height:36px;display:block;margin-bottom:2px}
+.msg-video{max-width:100%;border-radius:7px;display:block;margin-bottom:2px;max-height:260px}
+.msg-doc{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;margin-bottom:2px;text-decoration:none;color:var(--text);max-width:240px}
+.msg-doc span.doc-name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* INPUT ÁREA */
+.media-prev{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;margin:4px 13px 0;flex-shrink:0}
+.mp-info{flex:1;min-width:0}
+.mp-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-size{font-size:10px;color:var(--muted)}
+.mp-cancel{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:18px;flex-shrink:0;line-height:1;padding:0}
 .iarea{background:var(--bg-panel);padding:8px 13px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
 .iarea textarea{flex:1;background:var(--bg-input);border:none;border-radius:9px;padding:8px 12px;color:var(--text);font-size:13px;resize:none;max-height:110px;min-height:38px;font-family:inherit;outline:none;line-height:1.4}
 .iarea textarea::placeholder{color:var(--muted)}
+.battach{width:34px;height:34px;background:var(--bg-input);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:var(--muted)}
+.battach:hover{border-color:var(--green);color:var(--green)}
 .bsend{width:38px;height:38px;background:var(--green);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .bsend:hover{background:var(--green-dark)}
 .bsend svg{width:17px;height:17px;fill:#fff}
-.battach{width:34px;height:34px;background:var(--bg-input);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:var(--muted);transition:all .2s}
-.battach:hover{border-color:var(--green);color:var(--green)}
-.media-prev{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;margin:4px 13px 0}
-.media-prev-info{flex:1;min-width:0}
-.media-prev-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.media-prev-size{font-size:10px;color:var(--muted)}
-.media-prev-cancel{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:18px;flex-shrink:0;line-height:1;padding:0}
-.msg-img{max-width:100%;border-radius:7px;display:block;cursor:pointer;margin-bottom:2px}
-.msg-audio{width:220px;height:36px;margin-bottom:2px;display:block}
-.msg-video{max-width:100%;border-radius:7px;display:block;margin-bottom:2px;max-height:260px}
-.msg-doc{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border-radius:7px;padding:7px 10px;margin-bottom:2px;text-decoration:none;color:var(--text)}
-.msg-doc span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* PAINEL */
 .panel-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
 .panel-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-panel);flex-shrink:0}
 .panel-toolbar strong{font-size:13px}
@@ -86,6 +101,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-new:hover{background:var(--green-dark)}
 .panel-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
 .panel-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
+/* CARDS AUTOMAÇÃO */
 .acard{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .acard.disabled{opacity:.5}
 .acard-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -114,14 +131,16 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .btn-edit:hover{background:#3a4a54}
 .btn-del{background:transparent;border:1px solid #7f1d1d;color:#f87171;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer}
 .btn-del:hover{background:#7f1d1d;color:#fff}
+
+/* NÚMEROS */
 .num-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:16px}
 .ncard{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .ncard.padrao{border-color:var(--green)}
 .ncard-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
-.ncard-avatar{width:40px;height:40px;border-radius:50%;background:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ncard-av{width:40px;height:40px;border-radius:50%;background:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .ncard-info{flex:1;min-width:0}
-.ncard-apelido{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ncard-numero{font-size:11px;color:var(--muted);margin-top:1px}
+.ncard-ap{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ncard-num{font-size:11px;color:var(--muted);margin-top:1px}
 .nbadge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap}
 .nbadge.ativo{background:#1a3a2a;color:#4ade80}
 .nbadge.inativo{background:#3a1a1a;color:#f87171}
@@ -132,10 +151,12 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .ncard-row strong{color:var(--text);font-family:monospace;font-size:10px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ncard-token{font-size:10px;color:var(--muted);background:var(--bg-input);border-radius:5px;padding:4px 8px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ncard-foot{display:flex;gap:6px;padding:0 14px 12px}
-.btn-padrao{flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font-size:11px;cursor:pointer;transition:all .2s}
+.btn-padrao{flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font-size:11px;cursor:pointer}
 .btn-padrao:hover{border-color:var(--green);color:var(--green)}
 .btn-padrao.is-padrao{background:#1a3a1a;border-color:var(--green);color:var(--green)}
 .num-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13px;line-height:2;grid-column:1/-1}
+
+/* MODAL */
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center}
 .overlay.open{display:flex}
 .modal{background:var(--bg-panel);border-radius:12px;border:1px solid var(--border);padding:20px;width:500px;max-width:96vw;max-height:93vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
@@ -150,20 +171,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hidden{display:none!important}
 .infobox{background:var(--bg-chat);border-radius:7px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.8;border-left:3px solid var(--green)}
-.infobox code{color:var(--green);font-size:10px;word-break:break-all}
 .btns-section{display:flex;flex-direction:column;gap:8px}
 .btn-row{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px}
 .btn-row-head{display:flex;align-items:center;justify-content:space-between}
 .btn-row-num{font-size:11px;color:var(--muted);font-weight:600}
 .btn-row-del{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:0 4px;line-height:1}
-.add-btn-row{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px;font-size:11px;cursor:pointer;transition:all .2s;width:100%}
+.add-btn-row{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px;font-size:11px;cursor:pointer;width:100%}
 .add-btn-row:hover{border-color:var(--green);color:var(--green)}
-.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
-.btn-save{background:var(--green);border:none;color:#fff;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
-.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:7px;font-size:12px;cursor:pointer}
 .ckrow{display:flex;align-items:center;gap:8px}
 .ckrow input{width:14px;height:14px;accent-color:var(--green);flex-shrink:0}
 .ckrow label{font-size:12px;cursor:pointer}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.btn-save{background:var(--green);border:none;color:#fff;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:7px;font-size:12px;cursor:pointer}
+
 .toast{position:fixed;bottom:18px;right:18px;background:#1F2C34;border:1px solid var(--green);color:var(--text);padding:8px 14px;border-radius:8px;font-size:12px;z-index:999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none}
 .toast.show{opacity:1;transform:translateY(0)}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -188,7 +209,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 </div>
 
 <div class="main">
-  <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sh"><strong>Conversas</strong><span id="ctotal">0</span></div>
     <div class="search"><input type="text" id="srch" placeholder="🔍 Buscar..." oninput="filterC()"></div>
@@ -200,7 +220,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
     <div class="no-chat" id="noChat">
       <div class="no-chat-icon">💬</div>
       <div style="font-size:13px">Selecione uma conversa</div>
-      <div style="font-size:11px;color:var(--muted)">Tempo real via Supabase</div>
     </div>
     <div id="chatView" style="display:none;flex:1;flex-direction:column;overflow:hidden">
       <div class="ch">
@@ -209,24 +228,23 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
           <div class="ch-name" id="chName">-</div>
           <div class="ch-num" id="chNum">-</div>
         </div>
-        <select id="numeroSelect" style="background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:5px 9px;color:var(--text);font-size:11px;outline:none;max-width:150px" title="Número de envio">
+        <select id="numeroSelect" style="background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:5px 9px;color:var(--text);font-size:11px;outline:none;max-width:150px">
           <option value="">Nenhum número</option>
         </select>
       </div>
       <div class="msgs" id="msgsDiv"></div>
       <div id="mediaPrev" style="display:none" class="media-prev">
-        <span id="mediaPrevIcon" style="font-size:20px">📎</span>
-        <div class="media-prev-info">
-          <div class="media-prev-name" id="mediaPrevName">arquivo</div>
-          <div class="media-prev-size" id="mediaPrevSize"></div>
+        <span id="mpIcon" style="font-size:20px">📎</span>
+        <div class="mp-info">
+          <div class="mp-name" id="mpName">arquivo</div>
+          <div class="mp-size" id="mpSize"></div>
         </div>
-        <button class="media-prev-cancel" onclick="cancelMedia()">✕</button>
+        <button class="mp-cancel" onclick="cancelMedia()">✕</button>
       </div>
       <div class="iarea">
         <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.pdf,.doc,.docx" style="display:none" onchange="onFileSelected(event)">
         <button class="battach" onclick="document.getElementById('fileInput').click()" title="Enviar arquivo">📎</button>
-        <textarea id="msgIn" placeholder="Digite uma mensagem…" rows="1"
-          onkeydown="handleKey(event)" oninput="rsz(this)"></textarea>
+        <textarea id="msgIn" placeholder="Digite uma mensagem…" rows="1" onkeydown="handleKey(event)" oninput="rsz(this)"></textarea>
         <button class="bsend" onclick="sendMsg()">
           <svg viewBox="0 0 24 24"><path d="M2 21L23 12 2 3v7l15 2-15 2z"/></svg>
         </button>
@@ -259,45 +277,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="numOverlay">
   <div class="modal">
     <h3 id="numTitle">📲 Adicionar Número</h3>
-    <div class="infobox">
-      Acesse <strong>developers.facebook.com → seu app → WhatsApp → Configuração de API</strong><br>
-      para obter o <strong>Phone Number ID</strong> e gerar o <strong>Token de Acesso</strong>.
-    </div>
-    <div class="fg">
-      <label>Apelido (identificação interna)</label>
-      <input type="text" id="nApelido" placeholder="Ex: Vendas, Suporte, Principal">
-    </div>
+    <div class="infobox">Acesse <strong>developers.facebook.com → seu app → WhatsApp → Configuração de API</strong> para obter o Phone Number ID e o Token.</div>
+    <div class="fg"><label>Apelido</label><input type="text" id="nApelido" placeholder="Ex: Vendas, Suporte"></div>
     <div class="row2">
-      <div class="fg">
-        <label>Número de telefone</label>
-        <input type="text" id="nNumero" placeholder="+5548999990000">
-      </div>
-      <div class="fg">
-        <label>WABA ID (opcional)</label>
-        <input type="text" id="nWabaId" placeholder="123456789">
-      </div>
+      <div class="fg"><label>Número</label><input type="text" id="nNumero" placeholder="+5548999990000"></div>
+      <div class="fg"><label>WABA ID (opcional)</label><input type="text" id="nWabaId" placeholder="123456789"></div>
     </div>
-    <div class="fg">
-      <label>Phone Number ID ✱</label>
-      <input type="text" id="nPhoneId" placeholder="123456789012345">
-      <span class="hint">Encontrado em: Meta for Developers → WhatsApp → Configuração de API</span>
-    </div>
-    <div class="fg">
-      <label>Access Token (Token permanente) ✱</label>
-      <input type="text" id="nToken" placeholder="EAAxxxxxxxxxxxxxxx...">
-      <span class="hint">Meta Business Suite → Configurações → Usuários do Sistema → Gerar Token</span>
-    </div>
-    <div class="ckrow">
-      <input type="checkbox" id="nPadrao">
-      <label for="nPadrao">Definir como número padrão para envio</label>
-    </div>
-    <div class="ckrow">
-      <input type="checkbox" id="nAtivo" checked>
-      <label for="nAtivo">Número ativo</label>
-    </div>
+    <div class="fg"><label>Phone Number ID ✱</label><input type="text" id="nPhoneId" placeholder="123456789012345"></div>
+    <div class="fg"><label>Access Token ✱</label><input type="text" id="nToken" placeholder="EAAxxxxxxx..."></div>
+    <div class="ckrow"><input type="checkbox" id="nPadrao"><label for="nPadrao">Número padrão para envio</label></div>
+    <div class="ckrow"><input type="checkbox" id="nAtivo" checked><label for="nAtivo">Número ativo</label></div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeNumEditor()">Cancelar</button>
-      <button class="btn-save" onclick="saveNumero()">Salvar Número</button>
+      <button class="btn-save" onclick="saveNumero()">Salvar</button>
     </div>
   </div>
 </div>
@@ -306,59 +298,38 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="autoOverlay">
   <div class="modal">
     <h3 id="autoTitle">Nova Automação</h3>
-    <div class="fg">
-      <label>Nome</label>
-      <input type="text" id="edNome" placeholder="Ex: Menu de boas-vindas">
-    </div>
-    <div class="fg">
-      <label>Número associado (opcional — vazio = todos)</label>
-      <select id="edNumero"><option value="">📲 Todos os números</option></select>
-    </div>
-    <div class="fg">
-      <label>Gatilho</label>
+    <div class="fg"><label>Nome</label><input type="text" id="edNome" placeholder="Ex: Boas-vindas"></div>
+    <div class="fg"><label>Número associado (vazio = todos)</label><select id="edNumero"><option value="">📲 Todos os números</option></select></div>
+    <div class="fg"><label>Gatilho</label>
       <select id="edGatilho" onchange="onGatilho()">
         <option value="palavra">🔤 Palavra-chave</option>
         <option value="qualquer">📨 Qualquer mensagem</option>
-        <option value="novo_contato">👤 Novo contato (1ª mensagem)</option>
+        <option value="novo_contato">👤 Novo contato</option>
         <option value="horario">🕐 Fora de horário</option>
         <option value="botao_clicado">🖱 Botão clicado</option>
       </select>
     </div>
-    <div class="fg hidden" id="fPalavras">
-      <label>Palavras-chave (separadas por vírgula)</label>
-      <input type="text" id="edPalavras" placeholder="oi, olá, bom dia, hello">
-    </div>
+    <div class="fg hidden" id="fPalavras"><label>Palavras-chave (separadas por vírgula)</label><input type="text" id="edPalavras" placeholder="oi, olá, bom dia"></div>
     <div class="row2 hidden" id="fHorario">
       <div class="fg"><label>Hora início</label><input type="number" id="edHIni" min="0" max="23" placeholder="18"></div>
       <div class="fg"><label>Hora fim</label><input type="number" id="edHFim" min="0" max="23" placeholder="8"></div>
-      <span class="hint" style="grid-column:span 2">Ex: início 18, fim 8 → dispara das 18h até as 8h do dia seguinte.</span>
+      <span class="hint" style="grid-column:span 2">Ex: início 18, fim 8 → dispara das 18h às 8h</span>
     </div>
-    <div class="fg hidden" id="fBotaoId">
-      <label>ID do botão que dispara esta automação</label>
-      <input type="text" id="edBotaoId" placeholder="btn_preco">
-    </div>
-    <div class="fg">
-      <label>Tipo de resposta</label>
+    <div class="fg hidden" id="fBotaoId"><label>ID do botão</label><input type="text" id="edBotaoId" placeholder="btn_preco"></div>
+    <div class="fg"><label>Tipo de resposta</label>
       <select id="edTipo" onchange="onTipo()">
         <option value="texto">📝 Texto simples</option>
-        <option value="botoes">🔘 Texto + Botões de resposta rápida</option>
+        <option value="botoes">🔘 Texto + Botões</option>
       </select>
     </div>
-    <div class="fg">
-      <label>Mensagem de resposta</label>
-      <textarea id="edResposta" placeholder="Olá {nome}! Como posso ajudar?"></textarea>
-      <span class="hint">Use <strong>{nome}</strong> e <strong>{numero}</strong> na mensagem.</span>
-    </div>
+    <div class="fg"><label>Mensagem de resposta</label><textarea id="edResposta" placeholder="Olá {nome}!"></textarea><span class="hint">Use {nome} e {numero}</span></div>
     <div id="secBotoes" class="hidden">
       <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">🔘 Botões (máx. 3)</div>
       <div class="btns-section" id="btnRows"></div>
       <button class="add-btn-row" id="addBtnRowBtn" onclick="addBtnRow()">+ Adicionar botão</button>
-      <div class="hint" style="margin-top:6px">Título máx. 20 chars · O ID é o payload recebido quando o usuário clicar.</div>
+      <div class="hint" style="margin-top:6px">Título máx. 20 chars</div>
     </div>
-    <div class="ckrow">
-      <input type="checkbox" id="edAtivo" checked>
-      <label for="edAtivo">Ativar imediatamente</label>
-    </div>
+    <div class="ckrow"><input type="checkbox" id="edAtivo" checked><label for="edAtivo">Ativar imediatamente</label></div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeAutoEditor()">Cancelar</button>
       <button class="btn-save" onclick="saveAuto()">Salvar Automação</button>
@@ -370,18 +341,9 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="overlay" id="cfgOverlay">
   <div class="modal">
     <h3>⚙️ Configurações</h3>
-    <div class="fg">
-      <label>Webhook n8n — URL de envio (POST)</label>
-      <input type="text" id="cfgWh" placeholder="https://seu-n8n.com/webhook/whatsapp-send">
-    </div>
-    <div class="fg">
-      <label>Token de autenticação n8n (opcional)</label>
-      <input type="text" id="cfgTk" placeholder="Bearer xxxxx">
-    </div>
-    <div class="infobox">
-      Os números e tokens são gerenciados na aba <strong>📲 Números</strong>.<br>
-      Configure aqui apenas a URL do webhook de envio do n8n.
-    </div>
+    <div class="fg"><label>Webhook n8n — URL de envio (POST)</label><input type="text" id="cfgWh" placeholder="https://seu-n8n.com/webhook/whatsapp-send"></div>
+    <div class="fg"><label>Token n8n (opcional)</label><input type="text" id="cfgTk" placeholder="Bearer xxxxx"></div>
+    <div class="infobox">Os números e tokens são gerenciados na aba 📲 Números.</div>
     <div class="modal-foot">
       <button class="btn-cancel" onclick="closeCfg()">Fechar</button>
       <button class="btn-save" onclick="saveCfg()">Salvar</button>
@@ -392,32 +354,42 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 <div class="toast" id="toast"></div>
 
 <script>
+// ══════════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════════
 const SURL = 'https://ojgcddedmvuzealgbplq.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60';
 const db = supabase.createClient(SURL, SKEY);
 
-let cfg = JSON.parse(localStorage.getItem('wpanel_cfg') || '{}');
-let contacts = {}, curPhone = null, msgCh = null;
-let autos = [], numeros = [], curTab = 'chat';
-let editingAutoId = null, editingNumId = null, btnRowCount = 0;
+// ══════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════════════════════
+var cfg      = JSON.parse(localStorage.getItem('wpanel_cfg') || '{}');
+var contacts = {};
+var curPhone = null;
+var msgCh    = null;
+var autos    = [];
+var numeros  = [];
+var curTab   = 'chat';
+var editingAutoId = null;
+var editingNumId  = null;
+var btnRowCount   = 0;
+var selectedFile  = null;
 
-// ── INIT ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
 async function init() {
   setStatus(false, 'Conectando…');
-  try {
-    const { error } = await db.from('whatsapp_contacts').select('phone').limit(1);
-    if (error) throw error;
-    setStatus(true, 'Conectado');
-    await loadNumeros();
-    loadContacts();
-    loadAutos();
-    db.channel('cc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_contacts' }, () => loadContacts()).subscribe();
-    db.channel('ac').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_automacoes' }, () => loadAutos()).subscribe();
-    db.channel('nc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_numeros' }, () => loadNumeros()).subscribe();
-  } catch (e) {
-    setStatus(false, 'Erro — execute o SQL');
-    showToast('❌ ' + e.message);
-  }
+  var res = await db.from('whatsapp_contacts').select('phone').limit(1);
+  if (res.error) { setStatus(false, 'Erro — execute o SQL'); showToast('❌ ' + res.error.message); return; }
+  setStatus(true, 'Conectado');
+  await loadNumeros();
+  loadContacts();
+  loadAutos();
+  db.channel('cc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_contacts' }, function() { loadContacts(); }).subscribe();
+  db.channel('ac').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_automacoes' }, function() { loadAutos(); }).subscribe();
+  db.channel('nc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_numeros' }, function() { loadNumeros(); }).subscribe();
 }
 
 function setStatus(ok, t) {
@@ -425,7 +397,9 @@ function setStatus(ok, t) {
   document.getElementById('stxt').textContent = t;
 }
 
-// ── TABS ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
 function switchTab(t) {
   curTab = t;
   document.getElementById('tab-chat').className    = 'tab' + (t === 'chat'    ? ' active' : '');
@@ -436,37 +410,30 @@ function switchTab(t) {
   document.getElementById('view-numeros').style.display = t === 'numeros' ? 'flex' : 'none';
 }
 
-// ── NÚMEROS ───────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// NÚMEROS
+// ══════════════════════════════════════════════════════════════
 async function loadNumeros() {
-  const { data } = await db.from('whatsapp_numeros').select('*').order('created_at', { ascending: true });
-  numeros = data || [];
+  var res = await db.from('whatsapp_numeros').select('*').order('created_at', { ascending: true });
+  numeros = res.data || [];
   renderNumeros();
   refreshNumeroSelects();
 }
 
 function renderNumeros() {
-  const grid = document.getElementById('numGrid');
+  var grid = document.getElementById('numGrid');
   if (!numeros.length) {
-    grid.innerHTML = '<div class="num-empty">Nenhum número cadastrado ainda.<br>Clique em <strong>+ Adicionar Número</strong> para conectar seu WhatsApp Cloud API.</div>';
+    grid.innerHTML = '<div class="num-empty">Nenhum número cadastrado.<br>Clique em <strong>+ Adicionar Número</strong>.</div>';
     return;
   }
   grid.innerHTML = '';
   numeros.forEach(function(n) {
-    const card = document.createElement('div');
+    var card = document.createElement('div');
     card.className = 'ncard' + (n.padrao ? ' padrao' : '');
-
-    const tokenShort = (n.access_token || '').substring(0, 38) + '…';
-    const wabaRow = n.waba_id
-      ? '<div class="ncard-row"><span>WABA ID</span><strong>' + esc(n.waba_id) + '</strong></div>'
-      : '';
-
     card.innerHTML =
       '<div class="ncard-head">' +
-        '<div class="ncard-avatar">📱</div>' +
-        '<div class="ncard-info">' +
-          '<div class="ncard-apelido">' + esc(n.apelido) + '</div>' +
-          '<div class="ncard-numero">' + esc(n.numero || '') + '</div>' +
-        '</div>' +
+        '<div class="ncard-av">📱</div>' +
+        '<div class="ncard-info"><div class="ncard-ap">' + esc(n.apelido) + '</div><div class="ncard-num">' + esc(n.numero || '') + '</div></div>' +
         '<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">' +
           (n.padrao ? '<span class="nbadge padrao">⭐ Padrão</span>' : '') +
           '<span class="nbadge ' + (n.ativo ? 'ativo' : 'inativo') + '">' + (n.ativo ? '● Ativo' : '○ Inativo') + '</span>' +
@@ -474,60 +441,39 @@ function renderNumeros() {
       '</div>' +
       '<div class="ncard-body">' +
         '<div class="ncard-row"><span>Phone Number ID</span><strong>' + esc(n.phone_number_id) + '</strong></div>' +
-        wabaRow +
-        '<div class="ncard-row" style="margin-top:2px"><span>Access Token</span></div>' +
-        '<div class="ncard-token">' + esc(tokenShort) + '</div>' +
+        (n.waba_id ? '<div class="ncard-row"><span>WABA ID</span><strong>' + esc(n.waba_id) + '</strong></div>' : '') +
+        '<div class="ncard-token">' + esc((n.access_token || '').substring(0, 40)) + '…</div>' +
       '</div>' +
       '<div class="ncard-foot"></div>';
-
-    const foot = card.querySelector('.ncard-foot');
-
-    const btnPad = document.createElement('button');
-    btnPad.className = 'btn-padrao' + (n.padrao ? ' is-padrao' : '');
-    btnPad.textContent = n.padrao ? '⭐ Padrão' : 'Definir como padrão';
-    if (!n.padrao) btnPad.addEventListener('click', function() { setPadrao(n.id); });
-    foot.appendChild(btnPad);
-
-    const btnEdit = document.createElement('button');
-    btnEdit.className = 'btn-edit';
-    btnEdit.textContent = '✏️ Editar';
-    btnEdit.addEventListener('click', function() { openNumEditor(n.id); });
-    foot.appendChild(btnEdit);
-
-    const btnDel = document.createElement('button');
-    btnDel.className = 'btn-del';
-    btnDel.textContent = '🗑';
-    btnDel.addEventListener('click', function() { deleteNumero(n.id); });
-    foot.appendChild(btnDel);
-
+    var foot = card.querySelector('.ncard-foot');
+    var bp = document.createElement('button');
+    bp.className = 'btn-padrao' + (n.padrao ? ' is-padrao' : '');
+    bp.textContent = n.padrao ? '⭐ Padrão' : 'Definir padrão';
+    if (!n.padrao) bp.addEventListener('click', function() { setPadrao(n.id); });
+    foot.appendChild(bp);
+    var be = document.createElement('button'); be.className = 'btn-edit'; be.textContent = '✏️';
+    be.addEventListener('click', function() { openNumEditor(n.id); }); foot.appendChild(be);
+    var bd = document.createElement('button'); bd.className = 'btn-del'; bd.textContent = '🗑';
+    bd.addEventListener('click', function() { deleteNumero(n.id); }); foot.appendChild(bd);
     grid.appendChild(card);
   });
 }
 
 function refreshNumeroSelects() {
-  // Select no chat header
-  const sel = document.getElementById('numeroSelect');
-  const cur = sel.value;
+  var sel = document.getElementById('numeroSelect');
+  var cur = sel.value;
   sel.innerHTML = '<option value="">Sem número</option>';
   numeros.filter(function(n) { return n.ativo; }).forEach(function(n) {
-    const o = document.createElement('option');
-    o.value = n.id;
-    o.textContent = n.apelido + ' (' + n.numero + ')';
-    sel.appendChild(o);
+    var o = document.createElement('option'); o.value = n.id; o.textContent = n.apelido + ' (' + n.numero + ')'; sel.appendChild(o);
   });
   if (cur) sel.value = cur;
-  const pad = numeros.find(function(n) { return n.padrao; });
+  var pad = numeros.find(function(n) { return n.padrao; });
   if (pad && !sel.value) sel.value = pad.id;
-
-  // Select no modal de automação
-  const edSel = document.getElementById('edNumero');
-  const edCur = edSel.value;
-  edSel.innerHTML = '<option value="">📲 Todos os números</option>';
+  var edSel = document.getElementById('edNumero');
+  var edCur = edSel.value;
+  edSel.innerHTML = '<option value="">📲 Todos</option>';
   numeros.filter(function(n) { return n.ativo; }).forEach(function(n) {
-    const o = document.createElement('option');
-    o.value = n.id;
-    o.textContent = n.apelido + ' (' + n.numero + ')';
-    edSel.appendChild(o);
+    var o = document.createElement('option'); o.value = n.id; o.textContent = n.apelido + ' (' + n.numero + ')'; edSel.appendChild(o);
   });
   if (edCur) edSel.value = edCur;
 }
@@ -535,183 +481,170 @@ function refreshNumeroSelects() {
 async function setPadrao(id) {
   await db.from('whatsapp_numeros').update({ padrao: false }).neq('id', id);
   await db.from('whatsapp_numeros').update({ padrao: true }).eq('id', id);
-  showToast('⭐ Número padrão atualizado');
+  showToast('⭐ Padrão atualizado');
 }
-
 async function deleteNumero(id) {
   if (!confirm('Excluir este número?')) return;
   await db.from('whatsapp_numeros').delete().eq('id', id);
   showToast('🗑 Número excluído');
 }
-
 function openNumEditor(id) {
   editingNumId = id;
   document.getElementById('numTitle').textContent = id ? '✏️ Editar Número' : '📲 Adicionar Número';
-  const n = id ? numeros.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('nApelido').value  = n ? n.apelido         : '';
-  document.getElementById('nNumero').value   = n ? (n.numero || '')  : '';
+  var n = id ? numeros.find(function(x) { return x.id === id; }) : null;
+  document.getElementById('nApelido').value  = n ? n.apelido : '';
+  document.getElementById('nNumero').value   = n ? (n.numero || '') : '';
   document.getElementById('nPhoneId').value  = n ? n.phone_number_id : '';
-  document.getElementById('nToken').value    = n ? n.access_token    : '';
+  document.getElementById('nToken').value    = n ? n.access_token : '';
   document.getElementById('nWabaId').value   = n ? (n.waba_id || '') : '';
-  document.getElementById('nPadrao').checked = n ? n.padrao          : false;
-  document.getElementById('nAtivo').checked  = n ? n.ativo           : true;
+  document.getElementById('nPadrao').checked = n ? n.padrao : false;
+  document.getElementById('nAtivo').checked  = n ? n.ativo  : true;
   document.getElementById('numOverlay').classList.add('open');
 }
-
-function closeNumEditor() {
-  document.getElementById('numOverlay').classList.remove('open');
-}
-
+function closeNumEditor() { document.getElementById('numOverlay').classList.remove('open'); }
 async function saveNumero() {
-  const apelido        = document.getElementById('nApelido').value.trim();
-  const numero         = document.getElementById('nNumero').value.trim();
-  const phone_number_id = document.getElementById('nPhoneId').value.trim();
-  const access_token   = document.getElementById('nToken').value.trim();
-  const waba_id        = document.getElementById('nWabaId').value.trim();
-  const padrao         = document.getElementById('nPadrao').checked;
-  const ativo          = document.getElementById('nAtivo').checked;
-
-  if (!apelido)         { showToast('❌ Informe o apelido'); return; }
+  var apelido = document.getElementById('nApelido').value.trim();
+  var phone_number_id = document.getElementById('nPhoneId').value.trim();
+  var access_token = document.getElementById('nToken').value.trim();
+  if (!apelido) { showToast('❌ Informe o apelido'); return; }
   if (!phone_number_id) { showToast('❌ Informe o Phone Number ID'); return; }
-  if (!access_token)    { showToast('❌ Informe o Access Token'); return; }
-
-  if (padrao) {
-    await db.from('whatsapp_numeros').update({ padrao: false })
-      .neq('id', editingNumId || '00000000-0000-0000-0000-000000000000');
-  }
-
-  const payload = { apelido, numero, phone_number_id, access_token, waba_id: waba_id || null, padrao, ativo };
-  const { error } = editingNumId
-    ? await db.from('whatsapp_numeros').update(payload).eq('id', editingNumId)
-    : await db.from('whatsapp_numeros').insert(payload);
-
-  if (error) { showToast('❌ ' + error.message); return; }
+  if (!access_token) { showToast('❌ Informe o Access Token'); return; }
+  var padrao = document.getElementById('nPadrao').checked;
+  if (padrao) await db.from('whatsapp_numeros').update({ padrao: false }).neq('id', editingNumId || '00000000-0000-0000-0000-000000000000');
+  var payload = { apelido: apelido, numero: document.getElementById('nNumero').value.trim(), phone_number_id: phone_number_id, access_token: access_token, waba_id: document.getElementById('nWabaId').value.trim() || null, padrao: padrao, ativo: document.getElementById('nAtivo').checked };
+  var res = editingNumId ? await db.from('whatsapp_numeros').update(payload).eq('id', editingNumId) : await db.from('whatsapp_numeros').insert(payload);
+  if (res.error) { showToast('❌ ' + res.error.message); return; }
   showToast(editingNumId ? '✅ Número atualizado!' : '✅ Número adicionado!');
   closeNumEditor();
 }
 
-// ── CONTACTS ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════════════════════
 async function loadContacts() {
-  const { data } = await db.from('whatsapp_contacts').select('*').order('last_time', { ascending: false });
+  var res = await db.from('whatsapp_contacts').select('*').order('last_time', { ascending: false });
   contacts = {};
-  (data || []).forEach(function(c) { contacts[c.phone] = c; });
+  (res.data || []).forEach(function(c) { contacts[c.phone] = c; });
   renderContacts();
 }
-
 function renderContacts(f) {
   f = f || '';
-  const list = document.getElementById('clist');
-  const keys = Object.keys(contacts).filter(function(k) {
+  var list = document.getElementById('clist');
+  var keys = Object.keys(contacts).filter(function(k) {
     return !f || (contacts[k].name || '').toLowerCase().includes(f) || k.includes(f);
   });
   document.getElementById('ctotal').textContent = keys.length + ' conversa' + (keys.length !== 1 ? 's' : '');
   if (!keys.length) { list.innerHTML = '<div class="empty">Nenhuma mensagem ainda.</div>'; return; }
   list.innerHTML = '';
   keys.forEach(function(ph) {
-    const c = contacts[ph];
-    const t = c.last_time ? new Date(c.last_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
-    const div = document.createElement('div');
+    var c = contacts[ph];
+    var t = c.last_time ? new Date(c.last_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    var div = document.createElement('div');
     div.className = 'ci' + (curPhone === ph ? ' active' : '');
     div.innerHTML =
       '<div class="av">' + esc((c.name || ph)[0].toUpperCase()) + '</div>' +
-      '<div class="cinfo">' +
-        '<div class="cname">' + esc(c.name || ph) + '</div>' +
-        '<div class="clast">' + esc(c.last_msg || '') + '</div>' +
-      '</div>' +
-      '<div class="cmeta">' +
-        '<span class="ctime">' + t + '</span>' +
-        (c.unread ? '<span class="badge">' + c.unread + '</span>' : '') +
-      '</div>';
+      '<div class="cinfo"><div class="cname">' + esc(c.name || ph) + '</div><div class="clast">' + esc(c.last_msg || '') + '</div></div>' +
+      '<div class="cmeta"><span class="ctime">' + t + '</span>' + (c.unread ? '<span class="badge">' + c.unread + '</span>' : '') + '</div>';
     div.addEventListener('click', function() { openChat(ph); });
     list.appendChild(div);
   });
 }
-
 function filterC() { renderContacts(document.getElementById('srch').value.toLowerCase()); }
 
-// ── CHAT ─────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// CHAT
+// ══════════════════════════════════════════════════════════════
 async function openChat(ph) {
   curPhone = ph;
   if (curTab !== 'chat') switchTab('chat');
   renderContacts(document.getElementById('srch').value.toLowerCase());
-  const c = contacts[ph] || {};
+  var c = contacts[ph] || {};
   document.getElementById('noChat').style.display = 'none';
-  const cv = document.getElementById('chatView');
+  var cv = document.getElementById('chatView');
   cv.style.cssText = 'display:flex;flex:1;flex-direction:column;overflow:hidden';
   document.getElementById('chAv').textContent   = (c.name || ph)[0].toUpperCase();
   document.getElementById('chName').textContent = c.name || ph;
   document.getElementById('chNum').textContent  = ph;
-  // preselect numero do contato
   if (c.numero_id) document.getElementById('numeroSelect').value = c.numero_id;
   if (c.unread) await db.from('whatsapp_contacts').update({ unread: 0 }).eq('phone', ph);
   await loadMsgs(ph);
   if (msgCh) await db.removeChannel(msgCh);
   msgCh = db.channel('m-' + ph)
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'whatsapp_messages', filter: 'phone=eq.' + ph },
-      function(p) { appendBubble(p.new); })
+      function(payload) { appendBubble(payload.new); })
     .subscribe();
 }
 
 async function loadMsgs(ph) {
-  const { data } = await db.from('whatsapp_messages').select('*').eq('phone', ph).order('timestamp', { ascending: true });
-  const div = document.getElementById('msgsDiv');
+  var res = await db.from('whatsapp_messages').select('id,phone,text,direction,auto,media_url,media_type,buttons,timestamp').eq('phone', ph).order('timestamp', { ascending: true });
+  var div = document.getElementById('msgsDiv');
   div.innerHTML = '';
-  let last = '';
-  (data || []).forEach(function(m) {
-    const ds = fmtDate(m.timestamp);
+  var last = '';
+  (res.data || []).forEach(function(m) {
+    var ds = fmtDate(m.timestamp);
     if (ds !== last) { div.insertAdjacentHTML('beforeend', '<div class="ddiv">' + ds + '</div>'); last = ds; }
-    div.insertAdjacentHTML('beforeend', bubble(m));
+    div.insertAdjacentHTML('beforeend', buildBubble(m));
   });
   div.scrollTop = div.scrollHeight;
 }
 
 function appendBubble(m) {
-  const div = document.getElementById('msgsDiv');
-  div.insertAdjacentHTML('beforeend', bubble(m));
+  var div = document.getElementById('msgsDiv');
+  div.insertAdjacentHTML('beforeend', buildBubble(m));
   div.scrollTop = div.scrollHeight;
 }
 
-function bubble(m) {
-  const dir = m.direction === 'out' ? 'mout' : 'min';
-  const t = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  const tag = m.auto ? '<span class="autag">AUTO</span>' : '';
-  let mediaHtml = '';
-  if (m.media_url) {
-    if (m.media_type === 'image') {
-      mediaHtml = '<a href="' + m.media_url + '" target="_blank"><img class="msg-img" src="' + m.media_url + '" loading="lazy"></a>';
-    } else if (m.media_type === 'audio') {
-      mediaHtml = '<audio class="msg-audio" controls controlsList="nodownload" src="' + m.media_url + '"></audio>';
-    } else if (m.media_type === 'video') {
-      mediaHtml = '<video class="msg-video" controls src="' + m.media_url + '"></video>';
+// FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO — cada mensagem é independente
+function buildBubble(m) {
+  var dir  = m.direction === 'out' ? 'mout' : 'min';
+  var time = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  var tag  = m.auto ? '<span class="autag">AUTO</span>' : '';
+
+  // Mídia — cada mensagem tem seu próprio media_url e media_type
+  var mediaHtml = '';
+  if (m.media_url && m.media_type) {
+    var url = m.media_url;
+    var mt  = m.media_type;
+    if (mt === 'image') {
+      mediaHtml = '<a href="' + url + '" target="_blank"><img class="msg-img" src="' + url + '" loading="lazy" onerror="this.style.display=\'none\'"></a>';
+    } else if (mt === 'audio') {
+      mediaHtml = '<audio class="msg-audio" controls preload="metadata" src="' + url + '"></audio>';
+    } else if (mt === 'video') {
+      mediaHtml = '<video class="msg-video" controls preload="metadata" src="' + url + '"></video>';
     } else {
-      const fname = m.media_url.split('/').pop() || 'arquivo';
-      mediaHtml = '<a class="msg-doc" href="' + m.media_url + '" target="_blank"><span style="font-size:22px">📄</span><span>' + esc(fname) + '</span></a>';
+      var fname = url.split('/').pop().split('?')[0] || 'arquivo';
+      mediaHtml = '<a class="msg-doc" href="' + url + '" target="_blank" download><span style="font-size:22px">📄</span><span class="doc-name">' + esc(fname) + '</span></a>';
     }
   }
-  let btnsHtml = '';
+
+  // Botões interativos
+  var btnsHtml = '';
   if (m.buttons && m.buttons.length) {
     btnsHtml = '<div class="btn-preview-wrap">';
     m.buttons.forEach(function(b) { btnsHtml += '<div class="btn-preview">🔘 ' + esc(b.title) + '</div>'; });
     btnsHtml += '</div>';
   }
-  const textPart = (m.text && m.text.trim()) ? esc(m.text) : '';
-  return '<div class="mg ' + dir + '"><div class="mb">' + mediaHtml + textPart + tag + btnsHtml + '<span class="mt">' + t + '</span></div></div>';
+
+  var textPart = (m.text && m.text.trim()) ? esc(m.text) : '';
+
+  return '<div class="mg ' + dir + '"><div class="mb">' +
+    mediaHtml + textPart + tag + btnsHtml +
+    '<span class="mt">' + time + '</span>' +
+    '</div></div>';
 }
 
-// ── MÍDIA ─────────────────────────────────────────────────────
-let selectedFile = null;
-const SUPA_URL = 'https://ojgcddedmvuzealgbplq.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60';
-
+// ══════════════════════════════════════════════════════════════
+// ENVIO DE MENSAGEM
+// ══════════════════════════════════════════════════════════════
 function onFileSelected(e) {
-  const file = e.target.files[0];
+  var file = e.target.files[0];
   if (!file) return;
   selectedFile = file;
-  const icons = { image: '🖼️', audio: '🎤', video: '🎥' };
-  const mcat = file.type.split('/')[0];
-  document.getElementById('mediaPrevIcon').textContent = icons[mcat] || '📄';
-  document.getElementById('mediaPrevName').textContent = file.name;
-  document.getElementById('mediaPrevSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  var icons = { image: '🖼️', audio: '🎤', video: '🎥' };
+  var mcat = file.type.split('/')[0];
+  document.getElementById('mpIcon').textContent = icons[mcat] || '📄';
+  document.getElementById('mpName').textContent = file.name;
+  document.getElementById('mpSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
   document.getElementById('mediaPrev').style.display = 'flex';
   e.target.value = '';
 }
@@ -722,43 +655,33 @@ function cancelMedia() {
 }
 
 async function uploadMedia(file) {
-  const mcat = file.type.split('/')[0];
-  const ext = file.name.split('.').pop() || 'bin';
-  const fileName = curPhone + '_' + Date.now() + '.' + ext;
-  const buf = await file.arrayBuffer();
-  const resp = await fetch(SUPA_URL + '/storage/v1/object/whatsapp/' + fileName, {
+  var mcat = file.type.split('/')[0];
+  var ext = file.name.split('.').pop() || 'bin';
+  var fileName = curPhone + '_' + Date.now() + '.' + ext;
+  var buf = await file.arrayBuffer();
+  var resp = await fetch(SURL + '/storage/v1/object/whatsapp/' + fileName, {
     method: 'POST',
-    headers: {
-      apikey: SUPA_KEY,
-      Authorization: 'Bearer ' + SUPA_KEY,
-      'Content-Type': file.type
-    },
+    headers: { apikey: SKEY, Authorization: 'Bearer ' + SKEY, 'Content-Type': file.type },
     body: buf
   });
   if (!resp.ok) return null;
-  return {
-    url: SUPA_URL + '/storage/v1/object/public/whatsapp/' + fileName,
-    type: mcat,
-    mime: file.type,
-    name: file.name
-  };
+  return { url: SURL + '/storage/v1/object/public/whatsapp/' + fileName, type: mcat };
 }
 
 async function sendMsg() {
   if (!curPhone) { showToast('Selecione um contato'); return; }
-  const inp = document.getElementById('msgIn');
-  const text = inp.value.trim();
+  var inp = document.getElementById('msgIn');
+  var text = inp.value.trim();
   if (!text && !selectedFile) return;
 
-  const numId = document.getElementById('numeroSelect').value;
-  const num = numeros.find(function(n) { return n.id === numId; });
+  var numId = document.getElementById('numeroSelect').value;
+  var num = numeros.find(function(n) { return n.id === numId; });
 
-  // Upload de mídia se houver arquivo selecionado
-  let media_url = null, media_type = null;
+  var media_url = null, media_type = null;
   if (selectedFile) {
     showToast('⏳ Enviando arquivo...');
-    const uploaded = await uploadMedia(selectedFile);
-    if (!uploaded) { showToast('❌ Falha no upload do arquivo'); return; }
+    var uploaded = await uploadMedia(selectedFile);
+    if (!uploaded) { showToast('❌ Falha no upload'); return; }
     media_url = uploaded.url;
     media_type = uploaded.type;
     cancelMedia();
@@ -767,284 +690,170 @@ async function sendMsg() {
   inp.value = ''; rsz(inp);
 
   // Salvar no Supabase
-  const msgData = { phone: curPhone, text: text || '', direction: 'out', auto: false };
+  var msgData = { phone: curPhone, text: text || '', direction: 'out', auto: false };
   if (media_url) { msgData.media_url = media_url; msgData.media_type = media_type; }
-  const r1 = await db.from('whatsapp_messages').insert(msgData);
+  var r1 = await db.from('whatsapp_messages').insert(msgData);
   if (r1.error) { showToast('❌ Erro ao salvar: ' + r1.error.message); return; }
 
-  const lastLabel = media_type
-    ? ({ image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo' }[media_type] || '📄 Arquivo')
-    : ('✓ ' + text);
-
-  await db.from('whatsapp_contacts').upsert({
-    phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
-    last_msg: lastLabel, last_time: Date.now(), unread: 0
-  }, { onConflict: 'phone' });
+  var lastLabel = media_type ? ({ image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo' }[media_type] || '📄 Arquivo') : ('✓ ' + text);
+  await db.from('whatsapp_contacts').upsert({ phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone, last_msg: lastLabel, last_time: Date.now(), unread: 0 }, { onConflict: 'phone' });
   loadContacts();
 
-  // Enviar para n8n → WhatsApp
   if (cfg.webhook) {
     try {
-      const h = { 'Content-Type': 'application/json' };
+      var h = { 'Content-Type': 'application/json' };
       if (cfg.token) h['Authorization'] = cfg.token;
       await fetch(cfg.webhook, { method: 'POST', headers: h, body: JSON.stringify({
         phone: curPhone, message: text || '', type: 'manual',
         media_url: media_url, media_type: media_type,
         phoneNumberId: num ? num.phone_number_id : null,
-        accessToken:   num ? num.access_token    : null
+        accessToken: num ? num.access_token : null
       })});
-    } catch (e) { showToast('⚠️ n8n offline — msg salva'); }
-  } else {
-    showToast('⚠️ Configure o webhook do n8n em ⚙️');
+    } catch(e) { showToast('⚠️ n8n offline — msg salva'); }
   }
 }
 
 function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
 function rsz(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; }
 
-// ── AUTOMAÇÕES ───────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+// AUTOMAÇÕES
+// ══════════════════════════════════════════════════════════════
 async function loadAutos() {
-  const { data, error } = await db.from('whatsapp_automacoes').select('*').order('created_at', { ascending: true });
-  if (error) { showToast('Erro ao carregar automações'); return; }
-  autos = data || [];
+  var res = await db.from('whatsapp_automacoes').select('*').order('created_at', { ascending: true });
+  if (res.error) { showToast('Erro ao carregar automações'); return; }
+  autos = res.data || [];
   renderAutos();
 }
 
 var GLABELS = { palavra: '🔤 Palavra-chave', qualquer: '📨 Qualquer msg', novo_contato: '👤 Novo contato', horario: '🕐 Fora horário', botao_clicado: '🖱 Botão clicado' };
 
 function renderAutos() {
-  const list = document.getElementById('autoList');
-  if (!autos.length) {
-    list.innerHTML = '<div class="panel-empty">Nenhuma automação ainda.<br>Clique em "+ Nova Automação" para criar.</div>';
-    return;
-  }
+  var list = document.getElementById('autoList');
+  if (!autos.length) { list.innerHTML = '<div class="panel-empty">Nenhuma automação.<br>Clique em "+ Nova Automação".</div>'; return; }
   list.innerHTML = '';
   autos.forEach(function(a) {
-    let trig = '';
+    var trig = '';
     if (a.gatilho === 'palavra')       trig = 'Palavras: <strong>' + esc(a.palavras || '') + '</strong>';
-    if (a.gatilho === 'qualquer')      trig = 'Dispara em <strong>toda mensagem recebida</strong>';
+    if (a.gatilho === 'qualquer')      trig = 'Dispara em <strong>toda mensagem</strong>';
     if (a.gatilho === 'novo_contato')  trig = 'Dispara no <strong>primeiro contato</strong>';
-    if (a.gatilho === 'horario')       trig = 'Fora do horário: <strong>' + a.hora_ini + 'h–' + a.hora_fim + 'h</strong>';
+    if (a.gatilho === 'horario')       trig = 'Fora: <strong>' + a.hora_ini + 'h–' + a.hora_fim + 'h</strong>';
     if (a.gatilho === 'botao_clicado') trig = 'Botão ID: <strong>' + esc(a.botao_id || '') + '</strong>';
-    const numLabel = a.numero_id ? ((numeros.find(function(n) { return n.id === a.numero_id; }) || {}).apelido || 'Desconhecido') : 'Todos';
-    const btns = a.botoes || [];
-
-    const card = document.createElement('div');
+    var numLabel = a.numero_id ? ((numeros.find(function(n) { return n.id === a.numero_id; }) || {}).apelido || '?') : 'Todos';
+    var btns = a.botoes || [];
+    var btnsHtml = btns.length ? '<div class="acard-btns">' + btns.map(function(b) { return '<span class="acard-btn-pill">🔘 ' + esc(b.title) + '</span>'; }).join('') + '</div>' : '';
+    var card = document.createElement('div');
     card.className = 'acard' + (a.ativo ? '' : ' disabled');
-
-    let btnsHtml = '';
-    if (btns.length) {
-      btnsHtml = '<div class="acard-btns">';
-      btns.forEach(function(b) { btnsHtml += '<span class="acard-btn-pill">🔘 ' + esc(b.title) + '</span>'; });
-      btnsHtml += '</div>';
-    }
-
     card.innerHTML =
       '<div class="acard-head">' +
         '<div class="aname">' + esc(a.nome) + '</div>' +
         '<span class="gtag ' + a.gatilho + '">' + (GLABELS[a.gatilho] || a.gatilho) + '</span>' +
-        '<span class="tipo-tag ' + a.tipo_msg + '">' + (a.tipo_msg === 'botoes' ? '🔘 Com botões' : '📝 Texto') + '</span>' +
-        '<button class="toggle' + (a.ativo ? ' on' : '') + '" data-id="' + a.id + '" data-ativo="' + (!a.ativo) + '"></button>' +
+        '<span class="tipo-tag ' + a.tipo_msg + '">' + (a.tipo_msg === 'botoes' ? '🔘 Botões' : '📝 Texto') + '</span>' +
+        '<button class="toggle' + (a.ativo ? ' on' : '') + '"></button>' +
       '</div>' +
       '<div class="acard-body">' +
         '<div class="acard-trigger">' + trig + ' · 📲 <strong>' + esc(numLabel) + '</strong></div>' +
-        '<div class="acard-resp">' + esc(a.resposta) + '</div>' +
-        btnsHtml +
+        '<div class="acard-resp">' + esc(a.resposta) + '</div>' + btnsHtml +
       '</div>' +
       '<div class="acard-foot"></div>';
-
-    card.querySelector('.toggle').addEventListener('click', function() {
-      toggleAuto(a.id, !a.ativo);
-    });
-
-    const foot = card.querySelector('.acard-foot');
-    const btnEdit = document.createElement('button');
-    btnEdit.className = 'btn-edit';
-    btnEdit.textContent = '✏️ Editar';
-    btnEdit.addEventListener('click', function() { openAutoEditor(a.id); });
-    foot.appendChild(btnEdit);
-
-    const btnDel = document.createElement('button');
-    btnDel.className = 'btn-del';
-    btnDel.textContent = '🗑 Excluir';
-    btnDel.addEventListener('click', function() { deleteAuto(a.id); });
-    foot.appendChild(btnDel);
-
+    card.querySelector('.toggle').addEventListener('click', (function(id, ativo) { return function() { toggleAuto(id, !ativo); }; })(a.id, a.ativo));
+    var foot = card.querySelector('.acard-foot');
+    var be = document.createElement('button'); be.className = 'btn-edit'; be.textContent = '✏️ Editar';
+    be.addEventListener('click', (function(id) { return function() { openAutoEditor(id); }; })(a.id)); foot.appendChild(be);
+    var bd = document.createElement('button'); bd.className = 'btn-del'; bd.textContent = '🗑 Excluir';
+    bd.addEventListener('click', (function(id) { return function() { deleteAuto(id); }; })(a.id)); foot.appendChild(bd);
     list.appendChild(card);
   });
 }
 
-async function toggleAuto(id, ativo) {
-  await db.from('whatsapp_automacoes').update({ ativo: ativo }).eq('id', id);
-  showToast(ativo ? '✅ Ativada' : '⏸ Pausada');
-}
-async function deleteAuto(id) {
-  if (!confirm('Excluir esta automação?')) return;
-  await db.from('whatsapp_automacoes').delete().eq('id', id);
-  showToast('🗑 Excluída');
-}
+async function toggleAuto(id, ativo) { await db.from('whatsapp_automacoes').update({ ativo: ativo }).eq('id', id); showToast(ativo ? '✅ Ativada' : '⏸ Pausada'); }
+async function deleteAuto(id) { if (!confirm('Excluir?')) return; await db.from('whatsapp_automacoes').delete().eq('id', id); showToast('🗑 Excluída'); }
 
 function openAutoEditor(id) {
-  editingAutoId = id;
-  btnRowCount = 0;
+  editingAutoId = id; btnRowCount = 0;
   document.getElementById('autoTitle').textContent = id ? 'Editar Automação' : 'Nova Automação';
-  const a = id ? autos.find(function(x) { return x.id === id; }) : null;
-  document.getElementById('edNome').value     = a ? a.nome        : '';
+  var a = id ? autos.find(function(x) { return x.id === id; }) : null;
+  document.getElementById('edNome').value     = a ? a.nome : '';
   document.getElementById('edNumero').value   = a ? (a.numero_id || '') : '';
-  document.getElementById('edGatilho').value  = a ? a.gatilho     : 'palavra';
+  document.getElementById('edGatilho').value  = a ? a.gatilho : 'palavra';
   document.getElementById('edPalavras').value = a ? (a.palavras || '') : '';
   document.getElementById('edHIni').value     = a ? (a.hora_ini != null ? a.hora_ini : '') : '';
   document.getElementById('edHFim').value     = a ? (a.hora_fim != null ? a.hora_fim : '') : '';
   document.getElementById('edBotaoId').value  = a ? (a.botao_id || '') : '';
-  document.getElementById('edTipo').value     = a ? a.tipo_msg    : 'texto';
-  document.getElementById('edResposta').value = a ? a.resposta    : '';
-  document.getElementById('edAtivo').checked  = a ? a.ativo       : true;
+  document.getElementById('edTipo').value     = a ? a.tipo_msg : 'texto';
+  document.getElementById('edResposta').value = a ? a.resposta : '';
+  document.getElementById('edAtivo').checked  = a ? a.ativo : true;
   document.getElementById('btnRows').innerHTML = '';
   (a && a.botoes ? a.botoes : []).forEach(function(b) { addBtnRow(b); });
   onGatilho(); onTipo();
   document.getElementById('autoOverlay').classList.add('open');
 }
-
 function closeAutoEditor() { document.getElementById('autoOverlay').classList.remove('open'); }
-
 function onGatilho() {
-  const g = document.getElementById('edGatilho').value;
+  var g = document.getElementById('edGatilho').value;
   document.getElementById('fPalavras').className = 'fg' + (g === 'palavra' ? '' : ' hidden');
   document.getElementById('fHorario').className  = 'row2' + (g === 'horario' ? '' : ' hidden');
   document.getElementById('fBotaoId').className  = 'fg' + (g === 'botao_clicado' ? '' : ' hidden');
 }
-
-function onTipo() {
-  const t = document.getElementById('edTipo').value;
-  document.getElementById('secBotoes').className = t === 'botoes' ? '' : 'hidden';
-}
-
+function onTipo() { document.getElementById('secBotoes').className = document.getElementById('edTipo').value === 'botoes' ? '' : 'hidden'; }
 function addBtnRow(data) {
-  data = data || null;
-  const rows = document.getElementById('btnRows');
+  var rows = document.getElementById('btnRows');
   if (rows.children.length >= 3) { showToast('Máx. 3 botões'); return; }
   btnRowCount++;
-  const n = btnRowCount;
-  const div = document.createElement('div');
-  div.className = 'btn-row';
-  div.id = 'brow-' + n;
-  div.innerHTML =
-    '<div class="btn-row-head">' +
-      '<span class="btn-row-num">Botão ' + (rows.children.length + 1) + '</span>' +
-      '<button class="btn-row-del" type="button">✕</button>' +
-    '</div>' +
-    '<div class="row2">' +
-      '<div class="fg"><label>Título (max 20)</label><input type="text" id="bt-' + n + '" maxlength="20" placeholder="💰 Preços" value="' + esc(data ? data.title || '' : '') + '"></div>' +
-      '<div class="fg"><label>ID do botão</label><input type="text" id="bi-' + n + '" placeholder="btn_preco" value="' + esc(data ? data.id || '' : '') + '"></div>' +
-    '</div>';
+  var n = btnRowCount;
+  var div = document.createElement('div'); div.className = 'btn-row'; div.id = 'brow-' + n;
+  div.innerHTML = '<div class="btn-row-head"><span class="btn-row-num">Botão ' + (rows.children.length + 1) + '</span><button class="btn-row-del" type="button">✕</button></div>' +
+    '<div class="row2"><div class="fg"><label>Título (max 20)</label><input type="text" id="bt-' + n + '" maxlength="20" placeholder="💰 Preços" value="' + esc(data ? data.title || '' : '') + '"></div>' +
+    '<div class="fg"><label>ID</label><input type="text" id="bi-' + n + '" placeholder="btn_preco" value="' + esc(data ? data.id || '' : '') + '"></div></div>';
   div.querySelector('.btn-row-del').addEventListener('click', function() { removeBtnRow(n); });
   rows.appendChild(div);
   updateAddBtn();
 }
-
-function removeBtnRow(n) {
-  const el = document.getElementById('brow-' + n);
-  if (el) el.remove();
-  updateAddBtn();
-  var nums = document.querySelectorAll('.btn-row-num');
-  nums.forEach(function(el, i) { el.textContent = 'Botão ' + (i + 1); });
-}
-
-function updateAddBtn() {
-  document.getElementById('addBtnRowBtn').style.display =
-    document.getElementById('btnRows').children.length >= 3 ? 'none' : 'block';
-}
-
+function removeBtnRow(n) { var el = document.getElementById('brow-' + n); if (el) el.remove(); updateAddBtn(); document.querySelectorAll('.btn-row-num').forEach(function(el, i) { el.textContent = 'Botão ' + (i + 1); }); }
+function updateAddBtn() { document.getElementById('addBtnRowBtn').style.display = document.getElementById('btnRows').children.length >= 3 ? 'none' : 'block'; }
 function getBotoes() {
-  const rows = document.getElementById('btnRows').children;
-  const btns = [];
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const idEl    = row.querySelector('[id^="bi-"]');
-    const titleEl = row.querySelector('[id^="bt-"]');
-    const id    = idEl    ? idEl.value.trim()    : '';
-    const title = titleEl ? titleEl.value.trim() : '';
+  var rows = document.getElementById('btnRows').children, btns = [];
+  for (var i = 0; i < rows.length; i++) {
+    var id = rows[i].querySelector('[id^="bi-"]').value.trim();
+    var title = rows[i].querySelector('[id^="bt-"]').value.trim();
     if (id && title) btns.push({ id: id, title: title });
   }
   return btns;
 }
-
 async function saveAuto() {
-  const nome         = document.getElementById('edNome').value.trim();
-  const numero_id    = document.getElementById('edNumero').value || null;
-  const gatilho      = document.getElementById('edGatilho').value;
-  const palavras     = document.getElementById('edPalavras').value.trim();
-  const hora_ini     = parseInt(document.getElementById('edHIni').value);
-  const hora_fim     = parseInt(document.getElementById('edHFim').value);
-  const botao_id     = document.getElementById('edBotaoId').value.trim();
-  const tipo_msg     = document.getElementById('edTipo').value;
-  const resposta     = document.getElementById('edResposta').value.trim();
-  const ativo        = document.getElementById('edAtivo').checked;
-
+  var nome    = document.getElementById('edNome').value.trim();
+  var gatilho = document.getElementById('edGatilho').value;
+  var resposta = document.getElementById('edResposta').value.trim();
+  var tipo_msg = document.getElementById('edTipo').value;
   if (!nome)     { showToast('❌ Informe o nome'); return; }
-  if (!resposta) { showToast('❌ Informe a mensagem de resposta'); return; }
-  if (gatilho === 'palavra'       && !palavras)             { showToast('❌ Informe as palavras-chave'); return; }
-  if (gatilho === 'horario'       && (isNaN(hora_ini) || isNaN(hora_fim))) { showToast('❌ Informe as horas'); return; }
-  if (gatilho === 'botao_clicado' && !botao_id)             { showToast('❌ Informe o ID do botão'); return; }
-
-  let botoes = null;
-  if (tipo_msg === 'botoes') {
-    botoes = getBotoes();
-    if (!botoes.length) { showToast('❌ Adicione ao menos 1 botão'); return; }
-    for (let i = 0; i < botoes.length; i++) {
-      if (botoes[i].title.length > 20) { showToast('❌ Título "' + botoes[i].title + '" muito longo'); return; }
-    }
-  }
-
-  const payload = {
-    nome: nome, numero_id: numero_id, gatilho: gatilho,
-    palavras:  gatilho === 'palavra'       ? palavras  : null,
-    hora_ini:  gatilho === 'horario'       ? hora_ini  : null,
-    hora_fim:  gatilho === 'horario'       ? hora_fim  : null,
-    botao_id:  gatilho === 'botao_clicado' ? botao_id  : null,
-    tipo_msg: tipo_msg, resposta: resposta, botoes: botoes, ativo: ativo
-  };
-
-  const { error } = editingAutoId
-    ? await db.from('whatsapp_automacoes').update(payload).eq('id', editingAutoId)
-    : await db.from('whatsapp_automacoes').insert(payload);
-
-  if (error) { showToast('❌ ' + error.message); return; }
-  showToast(editingAutoId ? '✅ Automação atualizada!' : '✅ Automação criada!');
+  if (!resposta) { showToast('❌ Informe a resposta'); return; }
+  var botoes = null;
+  if (tipo_msg === 'botoes') { botoes = getBotoes(); if (!botoes.length) { showToast('❌ Adicione ao menos 1 botão'); return; } }
+  var payload = { nome: nome, numero_id: document.getElementById('edNumero').value || null, gatilho: gatilho,
+    palavras: gatilho === 'palavra' ? document.getElementById('edPalavras').value.trim() : null,
+    hora_ini: gatilho === 'horario' ? parseInt(document.getElementById('edHIni').value) : null,
+    hora_fim: gatilho === 'horario' ? parseInt(document.getElementById('edHFim').value) : null,
+    botao_id: gatilho === 'botao_clicado' ? document.getElementById('edBotaoId').value.trim() : null,
+    tipo_msg: tipo_msg, resposta: resposta, botoes: botoes, ativo: document.getElementById('edAtivo').checked };
+  var res = editingAutoId ? await db.from('whatsapp_automacoes').update(payload).eq('id', editingAutoId) : await db.from('whatsapp_automacoes').insert(payload);
+  if (res.error) { showToast('❌ ' + res.error.message); return; }
+  showToast(editingAutoId ? '✅ Atualizada!' : '✅ Criada!');
   closeAutoEditor();
 }
 
-// ── CONFIG ───────────────────────────────────────────────────
-function openCfg() {
-  document.getElementById('cfgWh').value = cfg.webhook || '';
-  document.getElementById('cfgTk').value = cfg.token   || '';
-  document.getElementById('cfgOverlay').classList.add('open');
-}
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+function openCfg() { document.getElementById('cfgWh').value = cfg.webhook || ''; document.getElementById('cfgTk').value = cfg.token || ''; document.getElementById('cfgOverlay').classList.add('open'); }
 function closeCfg() { document.getElementById('cfgOverlay').classList.remove('open'); }
-function saveCfg() {
-  cfg = { webhook: document.getElementById('cfgWh').value.trim(), token: document.getElementById('cfgTk').value.trim() };
-  localStorage.setItem('wpanel_cfg', JSON.stringify(cfg));
-  closeCfg();
-  showToast('✅ Salvo!');
-}
+function saveCfg() { cfg = { webhook: document.getElementById('cfgWh').value.trim(), token: document.getElementById('cfgTk').value.trim() }; localStorage.setItem('wpanel_cfg', JSON.stringify(cfg)); closeCfg(); showToast('✅ Salvo!'); }
 
-// ── UTILS ─────────────────────────────────────────────────────
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(function() { t.classList.remove('show'); }, 3000);
-}
-function esc(s) {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
-    .replace(/\n/g, '<br>');
-}
-function fmtDate(ts) {
-  const d = new Date(ts);
-  return d.toLocaleDateString('pt-BR') === new Date().toLocaleDateString('pt-BR') ? 'Hoje' : d.toLocaleDateString('pt-BR');
-}
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function showToast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 3000); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
+function fmtDate(ts) { var d = new Date(ts); return d.toLocaleDateString('pt-BR') === new Date().toLocaleDateString('pt-BR') ? 'Hoje' : d.toLocaleDateString('pt-BR'); }
 
 init();
 </script>
