@@ -653,13 +653,25 @@ function bubble(m) {
   const dir = m.direction === 'out' ? 'mout' : 'min';
   const t = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const tag = m.auto ? '<span class="autag">AUTO</span>' : '';
+  let mediaHtml = '';
+  if (m.media_url) {
+    if (m.media_type === 'image') {
+      mediaHtml = '<a href="' + m.media_url + '" target="_blank"><img src="' + m.media_url + '" style="max-width:100%;border-radius:7px;margin-bottom:4px;display:block"></a>';
+    } else if (m.media_type === 'audio') {
+      mediaHtml = '<audio controls src="' + m.media_url + '" style="max-width:240px;margin-bottom:4px;display:block"></audio>';
+    } else if (m.media_type === 'video') {
+      mediaHtml = '<video controls src="' + m.media_url + '" style="max-width:100%;border-radius:7px;margin-bottom:4px;display:block"></video>';
+    } else {
+      mediaHtml = '<a href="' + m.media_url + '" target="_blank" style="color:#5bc8f5;font-size:12px;display:block;margin-bottom:4px">📄 Abrir arquivo</a>';
+    }
+  }
   let btnsHtml = '';
   if (m.buttons && m.buttons.length) {
     btnsHtml = '<div class="btn-preview-wrap">';
     m.buttons.forEach(function(b) { btnsHtml += '<div class="btn-preview">🔘 ' + esc(b.title) + '</div>'; });
     btnsHtml += '</div>';
   }
-  return '<div class="mg ' + dir + '"><div class="mb">' + esc(m.text || '') + tag + btnsHtml + '<span class="mt">' + t + '</span></div></div>';
+  return '<div class="mg ' + dir + '"><div class="mb">' + mediaHtml + esc(m.text || '') + tag + btnsHtml + '<span class="mt">' + t + '</span></div></div>';
 }
 
 async function sendMsg() {
@@ -670,11 +682,21 @@ async function sendMsg() {
   inp.value = ''; rsz(inp);
   const numId = document.getElementById('numeroSelect').value;
   const num = numeros.find(function(n) { return n.id === numId; });
-  await db.from('whatsapp_messages').insert({ phone: curPhone, text: text, direction: 'out', auto: false });
-  await db.from('whatsapp_contacts').upsert({
+  const r1 = await db.from('whatsapp_messages').insert({ phone: curPhone, text: text, direction: 'out', auto: false });
+  if (r1.error) { showToast('❌ Erro ao salvar msg: ' + r1.error.message); return; }
+  const r2 = await db.from('whatsapp_contacts').upsert({
     phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
-    last_msg: text, last_time: Date.now(), unread: 0, numero_id: numId || null
-  });
+    last_msg: '✓ ' + text, last_time: Date.now(), unread: 0, numero_id: numId || null
+  }, { onConflict: 'phone' });
+  if (r2.error) {
+    // fallback sem numero_id (caso a coluna não exista no banco)
+    const r3 = await db.from('whatsapp_contacts').upsert({
+      phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone,
+      last_msg: '✓ ' + text, last_time: Date.now(), unread: 0
+    }, { onConflict: 'phone' });
+    if (r3.error) showToast('❌ Erro contato: ' + r3.error.message);
+  }
+  loadContacts();
   if (cfg.webhook) {
     try {
       const h = { 'Content-Type': 'application/json' };
