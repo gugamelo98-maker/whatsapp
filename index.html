@@ -613,6 +613,22 @@ function appendBubble(m) {
 }
 
 // FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO — cada mensagem é independente
+// Converte URL da Meta para URL do proxy n8n
+var N8N_PROXY = 'https://speedybarracuda-n8n.cloudfy.live/webhook/whatsapp-media';
+
+function proxyUrl(url, mediaType) {
+  if (!url) return url;
+  // Se já é URL do Supabase Storage, usa direto
+  if (url.includes('supabase.co/storage')) return url;
+  // Se é URL da Meta (lookaside.fbsbx.com), usa proxy n8n
+  if (url.includes('fbsbx.com') || url.includes('lookaside') || url.includes('facebook.com')) {
+    var num = numeros.find(function(n) { return n.padrao; }) || numeros[0];
+    if (!num) return url;
+    return N8N_PROXY + '?url=' + encodeURIComponent(url) + '&token=' + encodeURIComponent(num.access_token);
+  }
+  return url;
+}
+
 function buildBubble(m) {
   var dir  = m.direction === 'out' ? 'mout' : 'min';
   var time = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -626,15 +642,16 @@ function buildBubble(m) {
     var fname = url.split('/').pop().split('?')[0] || 'arquivo';
     // Detectar extensão para definir type correto no source
     var ext = fname.split('.').pop().toLowerCase();
+    var purl = proxyUrl(url, mt);
     if (mt === 'image') {
-      mediaHtml = '<a href="' + url + '" target="_blank" style="display:block"><img class="msg-img" src="' + url + '" loading="lazy" alt="Imagem"></a>';
+      mediaHtml = '<a href="' + purl + '" target="_blank" style="display:block"><img class="msg-img" src="' + purl + '" loading="lazy" alt="Imagem"></a>';
     } else if (mt === 'audio') {
       var audioType = ext === 'mp3' ? 'audio/mpeg' : ext === 'webm' ? 'audio/webm' : 'audio/ogg';
-      mediaHtml = '<audio class="msg-audio" controls preload="metadata"><source src="' + url + '" type="' + audioType + '"></audio><a href="' + url + '" download style="font-size:10px;color:var(--muted);display:block;margin-top:2px">⬇ Baixar áudio</a>';
+      mediaHtml = '<audio class="msg-audio" controls preload="metadata"><source src="' + purl + '" type="' + audioType + '"></audio><a href="' + purl + '" download style="font-size:10px;color:var(--muted);display:block;margin-top:2px">⬇ Baixar áudio</a>';
     } else if (mt === 'video') {
-      mediaHtml = '<video class="msg-video" controls preload="metadata"><source src="' + url + '" type="video/mp4"></video>';
+      mediaHtml = '<video class="msg-video" controls preload="metadata"><source src="' + purl + '" type="video/mp4"></video>';
     } else {
-      mediaHtml = '<a class="msg-doc" href="' + url + '" target="_blank" download><span style="font-size:22px">📄</span><span class="doc-name">' + esc(fname) + '</span></a>';
+      mediaHtml = '<a class="msg-doc" href="' + purl + '" target="_blank" download><span style="font-size:22px">📄</span><span class="doc-name">' + esc(fname) + '</span></a>';
     }
   }
 
