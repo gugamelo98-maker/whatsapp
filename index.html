@@ -576,11 +576,20 @@ async function openChat(ph) {
 }
 
 async function loadMsgs(ph) {
-  var res = await db.from('whatsapp_messages').select('id,phone,text,direction,auto,media_url,media_type,buttons,timestamp').eq('phone', ph).order('timestamp', { ascending: true });
   var div = document.getElementById('msgsDiv');
   div.innerHTML = '';
+  var res = await db.from('whatsapp_messages').select('*').eq('phone', ph).order('timestamp', { ascending: true });
+  if (res.error) {
+    div.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">Erro ao carregar mensagens: ' + esc(res.error.message) + '</div>';
+    return;
+  }
+  var msgs = res.data || [];
+  if (!msgs.length) {
+    div.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">Nenhuma mensagem ainda.</div>';
+    return;
+  }
   var last = '';
-  (res.data || []).forEach(function(m) {
+  msgs.forEach(function(m) {
     var ds = fmtDate(m.timestamp);
     if (ds !== last) { div.insertAdjacentHTML('beforeend', '<div class="ddiv">' + ds + '</div>'); last = ds; }
     div.insertAdjacentHTML('beforeend', buildBubble(m));
