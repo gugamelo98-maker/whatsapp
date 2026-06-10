@@ -1,1173 +1,972 @@
-{
-  "name": "WhatsApp + Supabase v4 (Cloud Compatible)",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "GET",
-        "path": "whatsapp-webhook",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "n001",
-      "name": "GET Verificação Meta",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        180,
-        120
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const q = $input.first().json.query;\nconst VERIFY_TOKEN = 'SEU_TOKEN_SECRETO';\nif (q['hub.mode'] === 'subscribe' && q['hub.verify_token'] === VERIFY_TOKEN)\n  return [{ json: { challenge: q['hub.challenge'] } }];\nreturn [{ json: { error: 'token invalido' } }];"
-      },
-      "id": "n002",
-      "name": "Checar Token",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        380,
-        120
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.challenge }}",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "n003",
-      "name": "Responder Challenge",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        580,
-        120
-      ]
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "whatsapp-webhook",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "n004",
-      "name": "POST Receber Mensagem",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        180,
-        320
-      ],
-      "notes": "URL: https://SEU-N8N/webhook/whatsapp-webhook"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={ \"status\": \"ok\" }",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "n005",
-      "name": "200 OK Meta",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        380,
-        220
-      ],
-      "notes": "Responde 200 imediatamente para a Meta"
-    },
-    {
-      "parameters": {
-        "jsCode": "// Extrai dados da mensagem — SEM chamadas HTTP\nconst body = $input.first().json.body || $input.first().json;\nconst value = body?.entry?.[0]?.changes?.[0]?.value;\nif (!value?.messages?.length) return [{ json: { skip: true } }];\nconst msg = value.messages[0];\nconst contact = value.contacts?.[0];\nconst phoneNumberId = value?.metadata?.phone_number_id || '1104382106082913';\nlet text = '', btnPayload = null, isBtnClick = false, mediaId = null, mediaType = null;\nif (msg.type === 'interactive') {\n  const t = msg.interactive?.type;\n  if (t === 'button_reply') { btnPayload = msg.interactive.button_reply.id; text = msg.interactive.button_reply.title; isBtnClick = true; }\n  else if (t === 'list_reply') { btnPayload = msg.interactive.list_reply.id; text = msg.interactive.list_reply.title; isBtnClick = true; }\n} else if (['image','audio','video','document'].includes(msg.type)) {\n  mediaType = msg.type;\n  mediaId = msg[msg.type]?.id || null;\n  text = msg[msg.type]?.caption || '';\n} else {\n  const m = { location: '📍 [Localização]', sticker: '🎉 [Sticker]' };\n  text = msg.type === 'text' ? (msg.text?.body || '') : (m[msg.type] || '[' + msg.type + ']');\n}\nreturn [{ json: { skip: false, phone: msg.from, name: contact?.profile?.name || msg.from, text, isBtnClick, btnPayload, messageId: msg.id, phoneNumberId, mediaId, mediaType } }];"
-      },
-      "id": "n006",
-      "name": "Extrair Mensagem",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        380,
-        400
-      ],
-      "notes": "Apenas lógica pura — sem HTTP"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "conditions": [
-            {
-              "leftValue": "={{ $json.skip }}",
-              "rightValue": false,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ]
-        }
-      },
-      "id": "n007",
-      "name": "Msg Válida?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        580,
-        400
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "// Extrai dados para uso no fluxo — SEM montar payload de save ainda\nconst d = $input.first().json;\nconst lastLabel = d.mediaType\n  ? ({ image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo', document: '📄 Documento' }[d.mediaType] || '📎 Mídia')\n  : (d.text || '');\nreturn [{ json: { ...d, lastLabel } }];"
-      },
-      "id": "n008",
-      "name": "Montar Payloads",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        780,
-        400
-      ],
-      "notes": "Apenas lógica pura — sem HTTP"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=representation"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.msgPayload }}",
-        "options": {}
-      },
-      "id": "n009",
-      "name": "Salvar Mensagem → Supabase",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1020,
-        280
-      ],
-      "notes": "Prefer return=representation retorna o ID gerado — usado para atualizar com media_url depois"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_contacts",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "resolution=merge-duplicates,return=minimal"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.contactPayload }}",
-        "options": {}
-      },
-      "id": "n010",
-      "name": "Upsert Contato → Supabase",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1020,
-        420
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": false,
-            "leftValue": "",
-            "typeValidation": "strict"
-          },
-          "conditions": [
-            {
-              "id": "check-media",
-              "leftValue": "={{ $json.mediaId }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "isNotEmpty",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        }
-      },
-      "id": "n011",
-      "name": "Tem Mídia?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1020,
-        560
-      ],
-      "notes": "Se tem mídia, processa download. Se não, vai direto para automações."
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_numeros?phone_number_id=eq.{{ $json.phoneNumberId }}&select=access_token&limit=1",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "n012",
-      "name": "Buscar Token do Número",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1260,
-        480
-      ],
-      "notes": "Busca o access_token pelo phoneNumberId"
-    },
-    {
-      "parameters": {
-        "jsCode": "const msgData = $('Montar Payloads').first().json;\nconst raw = $input.first().json;\nconst arr = Array.isArray(raw) ? raw : [raw];\nconst token = arr[0]?.access_token || '';\nif (!token) throw new Error('Token não encontrado para phoneNumberId: ' + msgData.phoneNumberId + '. Cadastre o número na aba Números.');\nreturn [{ json: { ...msgData, waToken: token } }];"
-      },
-      "id": "n013",
-      "name": "Combinar Token + Msg",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1500,
-        480
-      ],
-      "notes": "Junta o token com os dados da mensagem"
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://graph.facebook.com/v19.0/{{ $json.mediaId }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $json.waToken }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "n014",
-      "name": "Buscar URL Mídia na Meta",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1740,
-        480
-      ],
-      "notes": "Retorna {url, mime_type} do arquivo de mídia"
-    },
-    {
-      "parameters": {
-        "jsCode": "const prev = $('Combinar Token + Msg').first().json;\nconst metaData = $input.first().json;\n\nif (!metaData.url || metaData.error) {\n  const msgPayload = { phone: prev.phone, text: prev.text || '', direction: 'in', auto: false, media_url: null, media_type: null };\n  const contactPayload = { phone: prev.phone, name: prev.name || prev.phone, last_msg: prev.text || '', last_time: Date.now(), unread: 1 };\n  return [{ json: { ...prev, skipMedia: true, msgPayload, contactPayload } }];\n}\n\n// Limpar mime_type — remover codecs e parâmetros extras\n// ex: \"audio/ogg; codecs=opus\" → \"audio/ogg\"\nconst rawMime = metaData.mime_type || 'application/octet-stream';\nconst mime = rawMime.split(';')[0].trim();\n\n// Mapeamento de extensões por mime type\nconst extMap = {\n  'image/jpeg': 'jpg',\n  'image/jpg': 'jpg',\n  'image/png': 'png',\n  'image/webp': 'webp',\n  'image/gif': 'gif',\n  'audio/ogg': 'ogg',\n  'audio/mpeg': 'mp3',\n  'audio/mp4': 'm4a',\n  'audio/aac': 'aac',\n  'audio/amr': 'amr',\n  'video/mp4': 'mp4',\n  'video/3gpp': '3gp',\n  'application/pdf': 'pdf',\n  'application/msword': 'doc',\n  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',\n};\n\nconst ext = extMap[mime] || mime.split('/')[1] || 'bin';\nconst fileName = prev.phone + '_' + Date.now() + '.' + ext;\n\nreturn [{ json: { ...prev, metaMediaUrl: metaData.url, mime, ext, fileName, skipMedia: false } }];"
-      },
-      "id": "n015",
-      "name": "Preparar Download",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1980,
-        480
-      ],
-      "notes": "Prepara nome do arquivo e mime type"
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $json.metaMediaUrl }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "={{ 'Bearer ' + $json.waToken }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "responseFormat": "file"
-            }
-          }
-        }
-      },
-      "id": "n016",
-      "name": "Download Mídia da Meta",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2220,
-        480
-      ],
-      "notes": "Baixa o binário — responseFormat: file",
-      "headerParameters": {
-        "parameters": [
-          {
-            "name": "Authorization",
-            "value": "={{ 'Bearer ' + $json.waToken }}"
-          }
-        ]
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ 'https://ojgcddedmvuzealgbplq.supabase.co/storage/v1/object/whatsapp/' + $('Preparar Download').first().json.fileName }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Content-Type",
-              "value": "={{ $('Preparar Download').first().json.mime }}"
-            },
-            {
-              "name": "x-upsert",
-              "value": "true"
-            }
-          ]
-        },
-        "sendBody": true,
-        "bodyContentType": "binaryData",
-        "inputDataFieldName": "data",
-        "options": {}
-      },
-      "id": "n017",
-      "name": "Upload Mídia → Supabase Storage",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2460,
-        480
-      ],
-      "notes": "Upload binário para o bucket whatsapp do Supabase Storage"
-    },
-    {
-      "parameters": {
-        "jsCode": "const prep = $('Preparar Download').first().json;\nconst SUPA_URL = 'https://ojgcddedmvuzealgbplq.supabase.co';\nconst media_url = SUPA_URL + '/storage/v1/object/public/whatsapp/' + prep.fileName;\n\nconst typeLabels = { image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo', document: '📄 Documento' };\nconst lastLabel = typeLabels[prep.mediaType] || '📎 Mídia';\n\nconst msgPayload = {\n  phone: prep.phone,\n  text: prep.text || '',\n  direction: 'in',\n  auto: false,\n  media_url: media_url,\n  media_type: prep.mediaType\n};\nconst contactPayload = {\n  phone: prep.phone,\n  name: prep.name || prep.phone,\n  last_msg: lastLabel,\n  last_time: Date.now(),\n  unread: 1\n};\nreturn [{ json: { ...prep, media_url, msgPayload, contactPayload } }];"
-      },
-      "id": "n018",
-      "name": "Montar URL Pública",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2700,
-        480
-      ]
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "=https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_messages?phone=eq.{{ $json.phone }}&direction=eq.in&auto=eq.false&order=timestamp.desc&limit=1",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=minimal"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { media_url: $json.media_url, media_type: $json.mediaType } }}",
-        "options": {}
-      },
-      "id": "n019",
-      "name": "Atualizar Msg com Media URL",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2940,
-        480
-      ],
-      "notes": "PATCH na mensagem mais recente do contato sem media_url"
-    },
-    {
-      "parameters": {
-        "jsCode": "const d = $input.first().json;\n\n// Se já tem msgPayload montado (vem do fluxo de mídia), usa direto\nif (d.msgPayload && d.msgPayload.phone) {\n  return [{ json: d }];\n}\n\n// Branch sem mídia — monta agora\nconst msgPayload = {\n  phone: d.phone,\n  text: d.text || '',\n  direction: 'in',\n  auto: false,\n  media_url: null,\n  media_type: null\n};\nconst contactPayload = {\n  phone: d.phone,\n  name: d.name || d.phone,\n  last_msg: d.text || '',\n  last_time: Date.now(),\n  unread: 1\n};\nreturn [{ json: { ...d, msgPayload, contactPayload } }];"
-      },
-      "id": "n020",
-      "name": "Unificar Fluxo",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1260,
-        700
-      ],
-      "notes": "Junta os dois caminhos (com mídia e sem mídia) antes de buscar automações"
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_automacoes?ativo=eq.true&select=*",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "n021",
-      "name": "Buscar Automações → Supabase",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1500,
-        700
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const autos = Array.isArray($input.first().json) ? $input.first().json : [];\nconst dados = $('Unificar Fluxo').first().json;\nconst txtLower = (dados.text || '').toLowerCase();\nconst isBtnClk = dados.isBtnClick || false;\nconst btnPld = dados.btnPayload || '';\nconst hr = new Date().getHours();\nlet match = null;\nfor (const a of autos) {\n  if (!a.ativo) continue;\n  if (isBtnClk) {\n    if (a.gatilho === 'botao_clicado' && a.botao_id === btnPld) { match = a; break; }\n    continue;\n  }\n  if (a.gatilho === 'palavra') {\n    const words = (a.palavras || '').split(',').map(w => w.trim().toLowerCase()).filter(Boolean);\n    if (words.some(w => txtLower.includes(w))) { match = a; break; }\n  }\n  if (a.gatilho === 'qualquer') { match = a; break; }\n  if (a.gatilho === 'horario') {\n    const ini = parseInt(a.hora_ini), fim = parseInt(a.hora_fim);\n    const fora = ini > fim ? (hr >= ini || hr < fim) : (hr >= ini && hr < fim);\n    if (fora) { match = a; break; }\n  }\n  if (a.gatilho === 'novo_contato') {\n    return [{ json: { ...dados, match, checkNovo: true, novoResp: a } }];\n  }\n}\nreturn [{ json: { ...dados, match, checkNovo: false, hasMatch: !!match } }];"
-      },
-      "id": "n022",
-      "name": "Avaliar Automações",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1740,
-        700
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "conditions": [
-            {
-              "leftValue": "={{ $json.checkNovo }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ]
-        }
-      },
-      "id": "n023",
-      "name": "Verificar Novo Contato?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        1980,
-        700
-      ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_messages?phone=eq.{{ encodeURIComponent($json.phone) }}&direction=eq.in&select=id&limit=2",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "n024",
-      "name": "Contar Msgs Contato",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2220,
-        600
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const rows = Array.isArray($input.first().json) ? $input.first().json : [];\nconst dados = $('Unificar Fluxo').first().json;\nconst novoResp = dados.novoResp;\nconst isNew = rows.length <= 1;\nreturn [{ json: { ...dados, match: isNew ? novoResp : null, checkNovo: false, hasMatch: isNew } }];"
-      },
-      "id": "n025",
-      "name": "É Novo Contato?",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2460,
-        600
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "conditions": [
-            {
-              "leftValue": "={{ $json.hasMatch }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ]
-        }
-      },
-      "id": "n026",
-      "name": "Tem Automação?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        2700,
-        700
-      ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "=https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_numeros?phone_number_id=eq.{{ $json.phoneNumberId }}&select=access_token&limit=1",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "n027",
-      "name": "Buscar Token p/ Resposta",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2940,
-        620
-      ]
-    },
-    {
-      "parameters": {
-        "jsCode": "const numData = Array.isArray($input.first().json) ? $input.first().json : [$input.first().json];\nconst accessToken = numData[0]?.access_token || '';\nif (!accessToken) throw new Error('Token não encontrado. Cadastre o número na aba Números do painel.');\nconst dados = $('Unificar Fluxo').first().json;\nconst a = dados.match;\nif (!a) return [];\nconst phone = dados.phone;\nconst name = dados.name || phone;\nlet resposta = (a.resposta || '').replace(/\\{nome\\}/gi, name).replace(/\\{numero\\}/gi, phone);\nconst hasBotoes = a.tipo_msg === 'botoes' && Array.isArray(a.botoes) && a.botoes.length > 0;\nlet waPayload;\nif (hasBotoes) {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'interactive', interactive: { type: 'button', body: { text: resposta }, action: { buttons: a.botoes.slice(0,3).map(b => ({ type: 'reply', reply: { id: b.id, title: b.title.substring(0,20) } })) } } };\n} else {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: resposta } };\n}\nconst autoMsgPayload = { phone, text: resposta, direction: 'out', auto: true, buttons: hasBotoes ? a.botoes : null };\nreturn [{ json: { ...dados, resposta, hasBotoes, waPayload, autoMsgPayload, phoneNumberId: dados.phoneNumberId, accessToken } }];"
-      },
-      "id": "n028",
-      "name": "Montar Payload Resposta",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        3180,
-        620
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/{{ $json.phoneNumberId }}/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $json.accessToken }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.waPayload }}",
-        "options": {}
-      },
-      "id": "n029",
-      "name": "Enviar Resposta → WhatsApp",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3420,
-        520
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://ojgcddedmvuzealgbplq.supabase.co/rest/v1/whatsapp_messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "apikey",
-              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Authorization",
-              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            },
-            {
-              "name": "Prefer",
-              "value": "return=minimal"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.autoMsgPayload }}",
-        "options": {}
-      },
-      "id": "n030",
-      "name": "Salvar Resposta Auto → Supabase",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3420,
-        720
-      ]
-    },
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "whatsapp-send",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "id": "n031",
-      "name": "POST Envio Manual (Painel)",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        180,
-        960
-      ],
-      "notes": "URL: https://SEU-N8N/webhook/whatsapp-send"
-    },
-    {
-      "parameters": {
-        "jsCode": "const b = $input.first().json.body || $input.first().json;\nconst phoneNumberId = b.phoneNumberId || '1104382106082913';\nconst accessToken = b.accessToken || '';\nconst phone = b.phone;\nconst message = b.message || '';\nconst media_url = b.media_url || null;\nconst media_type = b.media_type || null;\nlet waPayload;\nif (media_url && media_type === 'image') {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'image', image: { link: media_url, caption: message } };\n} else if (media_url && media_type === 'audio') {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'audio', audio: { link: media_url } };\n} else if (media_url && media_type === 'video') {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'video', video: { link: media_url, caption: message } };\n} else if (media_url) {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'document', document: { link: media_url, caption: message } };\n} else {\n  waPayload = { messaging_product: 'whatsapp', to: phone, type: 'text', text: { body: message } };\n}\nreturn [{ json: { ...b, phoneNumberId, accessToken, waPayload } }];"
-      },
-      "id": "n032",
-      "name": "Montar Envio Manual",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        400,
-        960
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://graph.facebook.com/v19.0/{{ $json.phoneNumberId }}/messages",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "=Bearer {{ $json.accessToken || $vars.WA_ACCESS_TOKEN }}"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json.waPayload }}",
-        "options": {}
-      },
-      "id": "n033",
-      "name": "Enviar Manual → WhatsApp",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        620,
-        960
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={ \"status\": \"sent\" }",
-        "options": {
-          "responseCode": 200
-        }
-      },
-      "id": "n034",
-      "name": "Responder Painel OK",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1,
-      "position": [
-        840,
-        960
-      ]
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "conditions": [
-            {
-              "id": "skip-check",
-              "leftValue": "={{ $json.skipMedia }}",
-              "rightValue": true,
-              "operator": {
-                "type": "boolean",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        }
-      },
-      "id": "n_skip_media",
-      "name": "Pular Download?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        2220,
-        580
-      ],
-      "notes": "TRUE = skipMedia → vai direto para Unificar Fluxo\nFALSE = tem mídia → continua para Download"
-    }
-  ],
-  "connections": {
-    "GET Verificação Meta": {
-      "main": [
-        [
-          {
-            "node": "Checar Token",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Checar Token": {
-      "main": [
-        [
-          {
-            "node": "Responder Challenge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POST Receber Mensagem": {
-      "main": [
-        [
-          {
-            "node": "200 OK Meta",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Extrair Mensagem",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extrair Mensagem": {
-      "main": [
-        [
-          {
-            "node": "Msg Válida?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Msg Válida?": {
-      "main": [
-        [
-          {
-            "node": "Montar Payloads",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Montar Payloads": {
-      "main": [
-        [
-          {
-            "node": "Tem Mídia?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Tem Mídia?": {
-      "main": [
-        [
-          {
-            "node": "Buscar Token do Número",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Unificar Fluxo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar Token do Número": {
-      "main": [
-        [
-          {
-            "node": "Combinar Token + Msg",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Combinar Token + Msg": {
-      "main": [
-        [
-          {
-            "node": "Buscar URL Mídia na Meta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar URL Mídia na Meta": {
-      "main": [
-        [
-          {
-            "node": "Preparar Download",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Preparar Download": {
-      "main": [
-        [
-          {
-            "node": "Pular Download?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Download Mídia da Meta": {
-      "main": [
-        [
-          {
-            "node": "Upload Mídia → Supabase Storage",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload Mídia → Supabase Storage": {
-      "main": [
-        [
-          {
-            "node": "Montar URL Pública",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Montar URL Pública": {
-      "main": [
-        [
-          {
-            "node": "Unificar Fluxo",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Unificar Fluxo": {
-      "main": [
-        [
-          {
-            "node": "Salvar Mensagem → Supabase",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Upsert Contato → Supabase",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Buscar Automações → Supabase",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar Automações → Supabase": {
-      "main": [
-        [
-          {
-            "node": "Avaliar Automações",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Avaliar Automações": {
-      "main": [
-        [
-          {
-            "node": "Verificar Novo Contato?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Verificar Novo Contato?": {
-      "main": [
-        [
-          {
-            "node": "Contar Msgs Contato",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Tem Automação?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Contar Msgs Contato": {
-      "main": [
-        [
-          {
-            "node": "É Novo Contato?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "É Novo Contato?": {
-      "main": [
-        [
-          {
-            "node": "Tem Automação?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Tem Automação?": {
-      "main": [
-        [
-          {
-            "node": "Buscar Token p/ Resposta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Buscar Token p/ Resposta": {
-      "main": [
-        [
-          {
-            "node": "Montar Payload Resposta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Montar Payload Resposta": {
-      "main": [
-        [
-          {
-            "node": "Enviar Resposta → WhatsApp",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Salvar Resposta Auto → Supabase",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POST Envio Manual (Painel)": {
-      "main": [
-        [
-          {
-            "node": "Montar Envio Manual",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Montar Envio Manual": {
-      "main": [
-        [
-          {
-            "node": "Enviar Manual → WhatsApp",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Enviar Manual → WhatsApp": {
-      "main": [
-        [
-          {
-            "node": "Responder Painel OK",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Pular Download?": {
-      "main": [
-        [
-          {
-            "node": "Unificar Fluxo",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Download Mídia da Meta",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1",
-    "saveManualExecutions": true
-  },
-  "tags": [
-    "whatsapp",
-    "supabase",
-    "v4"
-  ]
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel WhatsApp</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#25D366;--green-dark:#128C7E;
+  --bg:#111B21;--bg-panel:#202C33;--bg-chat:#0B141A;
+  --bg-input:#2A3942;--msg-in:#202C33;--msg-out:#005C4B;
+  --text:#E9EDEF;--muted:#8696A0;--border:#2A3942;--orange:#FF6B35;
 }
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* TOPBAR */
+.topbar{background:var(--bg-panel);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.tl{display:flex;align-items:center;gap:10px}
+.logo{width:34px;height:34px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:17px}
+.ttitle{font-size:14px;font-weight:600}
+.tsub{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;margin-top:1px}
+.dot{width:7px;height:7px;border-radius:50%;background:#555;transition:background .3s}.dot.on{background:var(--green)}
+.tabs{display:flex;gap:2px}
+.tab{padding:6px 13px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;border:1px solid transparent;color:var(--muted);transition:all .2s;user-select:none}
+.tab.active{background:var(--bg-input);color:var(--text);border-color:var(--border)}
+.tab:hover:not(.active){color:var(--text)}
+.btn-icon{background:var(--bg-input);color:var(--text);border:1px solid var(--border);padding:6px 12px;border-radius:7px;cursor:pointer;font-size:12px}
+
+/* MAIN */
+.main{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:285px;background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sh{padding:9px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sh strong{font-size:12px}.sh span{font-size:11px;color:var(--muted)}
+.search{padding:7px 10px;border-bottom:1px solid var(--border)}
+.search input{width:100%;background:var(--bg-input);border:none;border-radius:7px;padding:6px 11px;color:var(--text);font-size:12px;outline:none}
+.search input::placeholder{color:var(--muted)}
+.clist{flex:1;overflow-y:auto}
+.ci{display:flex;align-items:center;gap:9px;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s}
+.ci:hover,.ci.active{background:var(--bg-input)}
+.av{width:38px;height:38px;border-radius:50%;background:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#fff;flex-shrink:0}
+.cinfo{flex:1;min-width:0}
+.cname{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clast{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.cmeta{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.ctime{font-size:10px;color:var(--muted)}
+.badge{background:var(--green);color:#fff;font-size:10px;font-weight:700;border-radius:9px;padding:1px 5px}
+.empty{padding:28px 14px;text-align:center;color:var(--muted);font-size:12px;line-height:1.8}
+
+/* CHAT */
+.chat-area{flex:1;display:flex;flex-direction:column;background:var(--bg-chat);overflow:hidden}
+.no-chat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:8px}
+.no-chat-icon{font-size:42px;opacity:.2}
+.ch{background:var(--bg-panel);padding:9px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;flex-shrink:0}
+.ch-info{flex:1}.ch-name{font-size:13px;font-weight:600}.ch-num{font-size:11px;color:var(--muted)}
+.msgs{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+
+/* BUBBLES */
+.mg{display:flex;flex-direction:column;margin-bottom:2px}
+.mb{max-width:66%;padding:6px 11px 18px;border-radius:8px;font-size:13px;line-height:1.5;position:relative;word-wrap:break-word}
+.min .mb{background:var(--msg-in);border-top-left-radius:0;align-self:flex-start}
+.mout .mb{background:var(--msg-out);border-top-right-radius:0;align-self:flex-end}
+.mout{align-items:flex-end}.min{align-items:flex-start}
+.mt{font-size:10px;color:var(--muted);position:absolute;bottom:3px;right:8px;white-space:nowrap}
+.autag{font-size:9px;background:var(--orange);color:#fff;border-radius:3px;padding:1px 4px;margin-left:4px;vertical-align:middle}
+.btn-preview-wrap{display:flex;flex-direction:column;gap:4px;margin-top:6px;border-top:1px solid rgba(255,255,255,.1);padding-top:6px}
+.btn-preview{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:6px;padding:5px 10px;font-size:12px;color:#5bc8f5;text-align:center}
+.ddiv{text-align:center;color:var(--muted);font-size:11px;margin:8px 0;display:flex;align-items:center;gap:7px}
+.ddiv::before,.ddiv::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* MÍDIA NAS MENSAGENS */
+.msg-img{max-width:100%;max-height:280px;border-radius:7px;display:block;cursor:pointer;margin-bottom:2px;object-fit:cover}
+.msg-audio{width:220px;height:36px;display:block;margin-bottom:2px}
+.msg-video{max-width:100%;border-radius:7px;display:block;margin-bottom:2px;max-height:260px}
+.msg-doc{display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.07);border-radius:7px;padding:7px 10px;margin-bottom:2px;text-decoration:none;color:var(--text);max-width:240px}
+.msg-doc span.doc-name{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* INPUT ÁREA */
+.media-prev{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:7px 12px;display:flex;align-items:center;gap:8px;margin:4px 13px 0;flex-shrink:0}
+.mp-info{flex:1;min-width:0}
+.mp-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-size{font-size:10px;color:var(--muted)}
+.mp-cancel{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:18px;flex-shrink:0;line-height:1;padding:0}
+.iarea{background:var(--bg-panel);padding:8px 13px;display:flex;align-items:flex-end;gap:8px;border-top:1px solid var(--border);flex-shrink:0}
+.iarea textarea{flex:1;background:var(--bg-input);border:none;border-radius:9px;padding:8px 12px;color:var(--text);font-size:13px;resize:none;max-height:110px;min-height:38px;font-family:inherit;outline:none;line-height:1.4}
+.iarea textarea::placeholder{color:var(--muted)}
+.battach{width:34px;height:34px;background:var(--bg-input);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;color:var(--muted)}
+.battach:hover{border-color:var(--green);color:var(--green)}
+.bsend{width:38px;height:38px;background:var(--green);border:none;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.bsend:hover{background:var(--green-dark)}
+.bsend svg{width:17px;height:17px;fill:#fff}
+.brec{width:38px;height:38px;background:var(--bg-input);border:1px solid var(--border);border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;transition:all .2s;position:relative}
+.brec:hover{border-color:#f87171;color:#f87171}
+.brec.recording{background:#e53e3e;border-color:#e53e3e;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(229,62,62,.4)}50%{box-shadow:0 0 0 8px rgba(229,62,62,0)}}
+.rec-timer{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:#f87171;white-space:nowrap;font-weight:600;display:none}
+.brec.recording .rec-timer{display:block}
+
+/* PAINEL */
+.panel-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.panel-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-panel);flex-shrink:0}
+.panel-toolbar strong{font-size:13px}
+.btn-new{background:var(--green);border:none;color:#fff;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-new:hover{background:var(--green-dark)}
+.panel-list{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.panel-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+
+/* CARDS AUTOMAÇÃO */
+.acard{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.acard.disabled{opacity:.5}
+.acard-head{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.acard-head .aname{flex:1;font-size:13px;font-weight:600;min-width:100px}
+.gtag{font-size:10px;padding:2px 7px;border-radius:12px;font-weight:600;white-space:nowrap}
+.gtag.palavra{background:#1a3a2a;color:#4ade80}
+.gtag.qualquer{background:#1a2a3a;color:#60a5fa}
+.gtag.novo_contato{background:#2a1a3a;color:#c084fc}
+.gtag.horario{background:#3a2a1a;color:#fb923c}
+.gtag.botao_clicado{background:#1a2a2a;color:#22d3ee}
+.tipo-tag{font-size:10px;padding:2px 7px;border-radius:12px;font-weight:600}
+.tipo-tag.botoes{background:#2a1f0a;color:#fbbf24}
+.tipo-tag.texto{background:#1a2a1a;color:#86efac}
+.toggle{width:34px;height:19px;background:var(--border);border-radius:10px;cursor:pointer;position:relative;border:none;flex-shrink:0;transition:background .2s}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';width:13px;height:13px;background:#fff;border-radius:50%;position:absolute;top:3px;left:3px;transition:left .2s}
+.toggle.on::after{left:18px}
+.acard-body{padding:10px 13px;display:flex;flex-direction:column;gap:5px}
+.acard-trigger{font-size:11px;color:var(--muted)}
+.acard-trigger strong{color:var(--text)}
+.acard-resp{font-size:12px;background:var(--bg-input);border-radius:6px;padding:6px 10px;color:var(--text);line-height:1.5;max-height:52px;overflow:hidden;white-space:pre-wrap;word-break:break-word}
+.acard-btns{display:flex;gap:5px;flex-wrap:wrap;margin-top:2px}
+.acard-btn-pill{font-size:10px;background:#1a2f3a;border:1px solid #2a4a5a;color:#5bc8f5;border-radius:5px;padding:3px 8px}
+.acard-foot{display:flex;gap:6px;padding:0 13px 10px}
+.btn-edit{flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font-size:11px;cursor:pointer}
+.btn-edit:hover{background:#3a4a54}
+.btn-del{background:transparent;border:1px solid #7f1d1d;color:#f87171;border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer}
+.btn-del:hover{background:#7f1d1d;color:#fff}
+
+/* NÚMEROS */
+.num-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;padding:16px}
+.ncard{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.ncard.padrao{border-color:var(--green)}
+.ncard-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.ncard-av{width:40px;height:40px;border-radius:50%;background:var(--green-dark);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ncard-info{flex:1;min-width:0}
+.ncard-ap{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ncard-num{font-size:11px;color:var(--muted);margin-top:1px}
+.nbadge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap}
+.nbadge.ativo{background:#1a3a2a;color:#4ade80}
+.nbadge.inativo{background:#3a1a1a;color:#f87171}
+.nbadge.padrao{background:#1a3a1a;color:var(--green)}
+.ncard-body{padding:10px 14px;display:flex;flex-direction:column;gap:5px}
+.ncard-row{display:flex;justify-content:space-between;align-items:center;font-size:11px}
+.ncard-row span{color:var(--muted)}
+.ncard-row strong{color:var(--text);font-family:monospace;font-size:10px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ncard-token{font-size:10px;color:var(--muted);background:var(--bg-input);border-radius:5px;padding:4px 8px;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ncard-foot{display:flex;gap:6px;padding:0 14px 12px}
+.btn-padrao{flex:1;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px;font-size:11px;cursor:pointer}
+.btn-padrao:hover{border-color:var(--green);color:var(--green)}
+.btn-padrao.is-padrao{background:#1a3a1a;border-color:var(--green);color:var(--green)}
+.num-empty{padding:60px 20px;text-align:center;color:var(--muted);font-size:13px;line-height:2;grid-column:1/-1}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--bg-panel);border-radius:12px;border:1px solid var(--border);padding:20px;width:500px;max-width:96vw;max-height:93vh;overflow-y:auto;display:flex;flex-direction:column;gap:12px}
+.modal h3{font-size:14px;font-weight:600}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:11px;color:var(--muted)}
+.fg input,.fg select,.fg textarea{background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-size:12px;outline:none;font-family:inherit;width:100%}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--green)}
+.fg textarea{resize:vertical;min-height:70px;line-height:1.5}
+.fg select option{background:var(--bg-panel)}
+.hint{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.6}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hidden{display:none!important}
+.infobox{background:var(--bg-chat);border-radius:7px;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.8;border-left:3px solid var(--green)}
+.btns-section{display:flex;flex-direction:column;gap:8px}
+.btn-row{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;flex-direction:column;gap:7px}
+.btn-row-head{display:flex;align-items:center;justify-content:space-between}
+.btn-row-num{font-size:11px;color:var(--muted);font-weight:600}
+.btn-row-del{background:transparent;border:none;color:#f87171;cursor:pointer;font-size:14px;padding:0 4px;line-height:1}
+.add-btn-row{background:transparent;border:1px dashed var(--border);color:var(--muted);border-radius:7px;padding:7px;font-size:11px;cursor:pointer;width:100%}
+.add-btn-row:hover{border-color:var(--green);color:var(--green)}
+.ckrow{display:flex;align-items:center;gap:8px}
+.ckrow input{width:14px;height:14px;accent-color:var(--green);flex-shrink:0}
+.ckrow label{font-size:12px;cursor:pointer}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.btn-save{background:var(--green);border:none;color:#fff;padding:8px 18px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer}
+.btn-cancel{background:transparent;border:1px solid var(--border);color:var(--text);padding:8px 16px;border-radius:7px;font-size:12px;cursor:pointer}
+
+.toast{position:fixed;bottom:18px;right:18px;background:#1F2C34;border:1px solid var(--green);color:var(--text);padding:8px 14px;border-radius:8px;font-size:12px;z-index:999;opacity:0;transform:translateY(6px);transition:all .3s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tl">
+    <div class="logo">📱</div>
+    <div>
+      <div class="ttitle">Painel WhatsApp</div>
+      <div class="tsub"><span class="dot" id="dot"></span><span id="stxt">Conectando...</span></div>
+    </div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" id="tab-chat"    onclick="switchTab('chat')">💬 Chat</div>
+    <div class="tab"        id="tab-auto"    onclick="switchTab('auto')">⚡ Automações</div>
+    <div class="tab"        id="tab-numeros" onclick="switchTab('numeros')">📲 Números</div>
+  </div>
+  <button class="btn-icon" onclick="openCfg()">⚙️</button>
+</div>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sh"><strong>Conversas</strong><span id="ctotal">0</span></div>
+    <div class="search"><input type="text" id="srch" placeholder="🔍 Buscar..." oninput="filterC()"></div>
+    <div class="clist" id="clist"><div class="empty">Nenhuma mensagem ainda.</div></div>
+  </div>
+
+  <!-- CHAT -->
+  <div class="chat-area" id="view-chat">
+    <div class="no-chat" id="noChat">
+      <div class="no-chat-icon">💬</div>
+      <div style="font-size:13px">Selecione uma conversa</div>
+    </div>
+    <div id="chatView" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+      <div class="ch">
+        <div class="av" id="chAv">?</div>
+        <div class="ch-info">
+          <div class="ch-name" id="chName">-</div>
+          <div class="ch-num" id="chNum">-</div>
+        </div>
+        <select id="numeroSelect" style="background:var(--bg-input);border:1px solid var(--border);border-radius:7px;padding:5px 9px;color:var(--text);font-size:11px;outline:none;max-width:150px">
+          <option value="">Nenhum número</option>
+        </select>
+      </div>
+      <div class="msgs" id="msgsDiv"></div>
+      <div id="mediaPrev" style="display:none" class="media-prev">
+        <span id="mpIcon" style="font-size:20px">📎</span>
+        <div class="mp-info">
+          <div class="mp-name" id="mpName">arquivo</div>
+          <div class="mp-size" id="mpSize"></div>
+        </div>
+        <button class="mp-cancel" onclick="cancelMedia()">✕</button>
+      </div>
+      <div class="iarea">
+        <input type="file" id="fileInput" accept="image/*,audio/*,video/*,.pdf,.doc,.docx" style="display:none" onchange="onFileSelected(event)">
+        <button class="battach" onclick="document.getElementById('fileInput').click()" title="Enviar arquivo">📎</button>
+        <textarea id="msgIn" placeholder="Digite uma mensagem…" rows="1" onkeydown="handleKey(event)" oninput="rsz(this)"></textarea>
+        <button class="brec" id="recBtn" onclick="toggleRecord()" title="Gravar áudio">
+          🎤<span class="rec-timer" id="recTimer">0:00</span>
+        </button>
+        <button class="bsend" onclick="sendMsg()">
+          <svg viewBox="0 0 24 24"><path d="M2 21L23 12 2 3v7l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AUTOMAÇÕES -->
+  <div class="panel-area" id="view-auto" style="display:none">
+    <div class="panel-toolbar">
+      <strong>⚡ Automações</strong>
+      <button class="btn-new" onclick="openAutoEditor(null)">+ Nova Automação</button>
+    </div>
+    <div class="panel-list" id="autoList"><div class="panel-empty">Carregando...</div></div>
+  </div>
+
+  <!-- NÚMEROS -->
+  <div class="panel-area" id="view-numeros" style="display:none">
+    <div class="panel-toolbar">
+      <strong>📲 Números WhatsApp Cloud API</strong>
+      <button class="btn-new" onclick="openNumEditor(null)">+ Adicionar Número</button>
+    </div>
+    <div style="flex:1;overflow-y:auto">
+      <div class="num-grid" id="numGrid"><div class="num-empty">Carregando...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NÚMERO -->
+<div class="overlay" id="numOverlay">
+  <div class="modal">
+    <h3 id="numTitle">📲 Adicionar Número</h3>
+    <div class="infobox">Acesse <strong>developers.facebook.com → seu app → WhatsApp → Configuração de API</strong> para obter o Phone Number ID e o Token.</div>
+    <div class="fg"><label>Apelido</label><input type="text" id="nApelido" placeholder="Ex: Vendas, Suporte"></div>
+    <div class="row2">
+      <div class="fg"><label>Número</label><input type="text" id="nNumero" placeholder="+5548999990000"></div>
+      <div class="fg"><label>WABA ID (opcional)</label><input type="text" id="nWabaId" placeholder="123456789"></div>
+    </div>
+    <div class="fg"><label>Phone Number ID ✱</label><input type="text" id="nPhoneId" placeholder="123456789012345"></div>
+    <div class="fg"><label>Access Token ✱</label><input type="text" id="nToken" placeholder="EAAxxxxxxx..."></div>
+    <div class="ckrow"><input type="checkbox" id="nPadrao"><label for="nPadrao">Número padrão para envio</label></div>
+    <div class="ckrow"><input type="checkbox" id="nAtivo" checked><label for="nAtivo">Número ativo</label></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeNumEditor()">Cancelar</button>
+      <button class="btn-save" onclick="saveNumero()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AUTOMAÇÃO -->
+<div class="overlay" id="autoOverlay">
+  <div class="modal">
+    <h3 id="autoTitle">Nova Automação</h3>
+    <div class="fg"><label>Nome</label><input type="text" id="edNome" placeholder="Ex: Boas-vindas"></div>
+    <div class="fg"><label>Número associado (vazio = todos)</label><select id="edNumero"><option value="">📲 Todos os números</option></select></div>
+    <div class="fg"><label>Gatilho</label>
+      <select id="edGatilho" onchange="onGatilho()">
+        <option value="palavra">🔤 Palavra-chave</option>
+        <option value="qualquer">📨 Qualquer mensagem</option>
+        <option value="novo_contato">👤 Novo contato</option>
+        <option value="horario">🕐 Fora de horário</option>
+        <option value="botao_clicado">🖱 Botão clicado</option>
+      </select>
+    </div>
+    <div class="fg hidden" id="fPalavras"><label>Palavras-chave (separadas por vírgula)</label><input type="text" id="edPalavras" placeholder="oi, olá, bom dia"></div>
+    <div class="row2 hidden" id="fHorario">
+      <div class="fg"><label>Hora início</label><input type="number" id="edHIni" min="0" max="23" placeholder="18"></div>
+      <div class="fg"><label>Hora fim</label><input type="number" id="edHFim" min="0" max="23" placeholder="8"></div>
+      <span class="hint" style="grid-column:span 2">Ex: início 18, fim 8 → dispara das 18h às 8h</span>
+    </div>
+    <div class="fg hidden" id="fBotaoId"><label>ID do botão</label><input type="text" id="edBotaoId" placeholder="btn_preco"></div>
+    <div class="fg"><label>Tipo de resposta</label>
+      <select id="edTipo" onchange="onTipo()">
+        <option value="texto">📝 Texto simples</option>
+        <option value="botoes">🔘 Texto + Botões</option>
+      </select>
+    </div>
+    <div class="fg"><label>Mensagem de resposta</label><textarea id="edResposta" placeholder="Olá {nome}!"></textarea><span class="hint">Use {nome} e {numero}</span></div>
+    <div id="secBotoes" class="hidden">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text)">🔘 Botões (máx. 3)</div>
+      <div class="btns-section" id="btnRows"></div>
+      <button class="add-btn-row" id="addBtnRowBtn" onclick="addBtnRow()">+ Adicionar botão</button>
+      <div class="hint" style="margin-top:6px">Título máx. 20 chars</div>
+    </div>
+    <div class="ckrow"><input type="checkbox" id="edAtivo" checked><label for="edAtivo">Ativar imediatamente</label></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeAutoEditor()">Cancelar</button>
+      <button class="btn-save" onclick="saveAuto()">Salvar Automação</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIG -->
+<div class="overlay" id="cfgOverlay">
+  <div class="modal">
+    <h3>⚙️ Configurações</h3>
+    <div class="fg"><label>Webhook n8n — URL de envio (POST)</label><input type="text" id="cfgWh" placeholder="https://seu-n8n.com/webhook/whatsapp-send"></div>
+    <div class="fg"><label>Token n8n (opcional)</label><input type="text" id="cfgTk" placeholder="Bearer xxxxx"></div>
+    <div class="infobox">Os números e tokens são gerenciados na aba 📲 Números.</div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeCfg()">Fechar</button>
+      <button class="btn-save" onclick="saveCfg()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════════════════
+const SURL = 'https://ojgcddedmvuzealgbplq.supabase.co';
+const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9qZ2NkZGVkbXZ1emVhbGdicGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMDE0MTQsImV4cCI6MjA5NDY3NzQxNH0.WGfc8sQTTxGk3K7098jCUczSIwAQ7j9SqLBUAWELu60';
+const db = supabase.createClient(SURL, SKEY);
+
+// ══════════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════════════════════
+var cfg      = JSON.parse(localStorage.getItem('wpanel_cfg') || '{}');
+var contacts = {};
+var curPhone = null;
+var msgCh    = null;
+var autos    = [];
+var numeros  = [];
+var curTab   = 'chat';
+var editingAutoId = null;
+var editingNumId  = null;
+var btnRowCount   = 0;
+var selectedFile  = null;
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+async function init() {
+  setStatus(false, 'Conectando…');
+  var res = await db.from('whatsapp_contacts').select('phone').limit(1);
+  if (res.error) { setStatus(false, 'Erro — execute o SQL'); showToast('❌ ' + res.error.message); return; }
+  setStatus(true, 'Conectado');
+  await loadNumeros();
+  loadContacts();
+  loadAutos();
+  db.channel('cc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_contacts' }, function() { loadContacts(); }).subscribe();
+  db.channel('ac').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_automacoes' }, function() { loadAutos(); }).subscribe();
+  db.channel('nc').on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_numeros' }, function() { loadNumeros(); }).subscribe();
+}
+
+function setStatus(ok, t) {
+  document.getElementById('dot').className = 'dot' + (ok ? ' on' : '');
+  document.getElementById('stxt').textContent = t;
+}
+
+// ══════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════
+function switchTab(t) {
+  curTab = t;
+  document.getElementById('tab-chat').className    = 'tab' + (t === 'chat'    ? ' active' : '');
+  document.getElementById('tab-auto').className    = 'tab' + (t === 'auto'    ? ' active' : '');
+  document.getElementById('tab-numeros').className = 'tab' + (t === 'numeros' ? ' active' : '');
+  document.getElementById('view-chat').style.display    = t === 'chat'    ? 'flex' : 'none';
+  document.getElementById('view-auto').style.display    = t === 'auto'    ? 'flex' : 'none';
+  document.getElementById('view-numeros').style.display = t === 'numeros' ? 'flex' : 'none';
+}
+
+// ══════════════════════════════════════════════════════════════
+// NÚMEROS
+// ══════════════════════════════════════════════════════════════
+async function loadNumeros() {
+  var res = await db.from('whatsapp_numeros').select('*').order('created_at', { ascending: true });
+  numeros = res.data || [];
+  renderNumeros();
+  refreshNumeroSelects();
+}
+
+function renderNumeros() {
+  var grid = document.getElementById('numGrid');
+  if (!numeros.length) {
+    grid.innerHTML = '<div class="num-empty">Nenhum número cadastrado.<br>Clique em <strong>+ Adicionar Número</strong>.</div>';
+    return;
+  }
+  grid.innerHTML = '';
+  numeros.forEach(function(n) {
+    var card = document.createElement('div');
+    card.className = 'ncard' + (n.padrao ? ' padrao' : '');
+    card.innerHTML =
+      '<div class="ncard-head">' +
+        '<div class="ncard-av">📱</div>' +
+        '<div class="ncard-info"><div class="ncard-ap">' + esc(n.apelido) + '</div><div class="ncard-num">' + esc(n.numero || '') + '</div></div>' +
+        '<div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">' +
+          (n.padrao ? '<span class="nbadge padrao">⭐ Padrão</span>' : '') +
+          '<span class="nbadge ' + (n.ativo ? 'ativo' : 'inativo') + '">' + (n.ativo ? '● Ativo' : '○ Inativo') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ncard-body">' +
+        '<div class="ncard-row"><span>Phone Number ID</span><strong>' + esc(n.phone_number_id) + '</strong></div>' +
+        (n.waba_id ? '<div class="ncard-row"><span>WABA ID</span><strong>' + esc(n.waba_id) + '</strong></div>' : '') +
+        '<div class="ncard-token">' + esc((n.access_token || '').substring(0, 40)) + '…</div>' +
+      '</div>' +
+      '<div class="ncard-foot"></div>';
+    var foot = card.querySelector('.ncard-foot');
+    var bp = document.createElement('button');
+    bp.className = 'btn-padrao' + (n.padrao ? ' is-padrao' : '');
+    bp.textContent = n.padrao ? '⭐ Padrão' : 'Definir padrão';
+    if (!n.padrao) bp.addEventListener('click', function() { setPadrao(n.id); });
+    foot.appendChild(bp);
+    var be = document.createElement('button'); be.className = 'btn-edit'; be.textContent = '✏️';
+    be.addEventListener('click', function() { openNumEditor(n.id); }); foot.appendChild(be);
+    var bd = document.createElement('button'); bd.className = 'btn-del'; bd.textContent = '🗑';
+    bd.addEventListener('click', function() { deleteNumero(n.id); }); foot.appendChild(bd);
+    grid.appendChild(card);
+  });
+}
+
+function refreshNumeroSelects() {
+  var sel = document.getElementById('numeroSelect');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">Sem número</option>';
+  numeros.filter(function(n) { return n.ativo; }).forEach(function(n) {
+    var o = document.createElement('option'); o.value = n.id; o.textContent = n.apelido + ' (' + n.numero + ')'; sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+  var pad = numeros.find(function(n) { return n.padrao; });
+  if (pad && !sel.value) sel.value = pad.id;
+  var edSel = document.getElementById('edNumero');
+  var edCur = edSel.value;
+  edSel.innerHTML = '<option value="">📲 Todos</option>';
+  numeros.filter(function(n) { return n.ativo; }).forEach(function(n) {
+    var o = document.createElement('option'); o.value = n.id; o.textContent = n.apelido + ' (' + n.numero + ')'; edSel.appendChild(o);
+  });
+  if (edCur) edSel.value = edCur;
+}
+
+async function setPadrao(id) {
+  await db.from('whatsapp_numeros').update({ padrao: false }).neq('id', id);
+  await db.from('whatsapp_numeros').update({ padrao: true }).eq('id', id);
+  showToast('⭐ Padrão atualizado');
+}
+async function deleteNumero(id) {
+  if (!confirm('Excluir este número?')) return;
+  await db.from('whatsapp_numeros').delete().eq('id', id);
+  showToast('🗑 Número excluído');
+}
+function openNumEditor(id) {
+  editingNumId = id;
+  document.getElementById('numTitle').textContent = id ? '✏️ Editar Número' : '📲 Adicionar Número';
+  var n = id ? numeros.find(function(x) { return x.id === id; }) : null;
+  document.getElementById('nApelido').value  = n ? n.apelido : '';
+  document.getElementById('nNumero').value   = n ? (n.numero || '') : '';
+  document.getElementById('nPhoneId').value  = n ? n.phone_number_id : '';
+  document.getElementById('nToken').value    = n ? n.access_token : '';
+  document.getElementById('nWabaId').value   = n ? (n.waba_id || '') : '';
+  document.getElementById('nPadrao').checked = n ? n.padrao : false;
+  document.getElementById('nAtivo').checked  = n ? n.ativo  : true;
+  document.getElementById('numOverlay').classList.add('open');
+}
+function closeNumEditor() { document.getElementById('numOverlay').classList.remove('open'); }
+async function saveNumero() {
+  var apelido = document.getElementById('nApelido').value.trim();
+  var phone_number_id = document.getElementById('nPhoneId').value.trim();
+  var access_token = document.getElementById('nToken').value.trim();
+  if (!apelido) { showToast('❌ Informe o apelido'); return; }
+  if (!phone_number_id) { showToast('❌ Informe o Phone Number ID'); return; }
+  if (!access_token) { showToast('❌ Informe o Access Token'); return; }
+  var padrao = document.getElementById('nPadrao').checked;
+  if (padrao) await db.from('whatsapp_numeros').update({ padrao: false }).neq('id', editingNumId || '00000000-0000-0000-0000-000000000000');
+  var payload = { apelido: apelido, numero: document.getElementById('nNumero').value.trim(), phone_number_id: phone_number_id, access_token: access_token, waba_id: document.getElementById('nWabaId').value.trim() || null, padrao: padrao, ativo: document.getElementById('nAtivo').checked };
+  var res = editingNumId ? await db.from('whatsapp_numeros').update(payload).eq('id', editingNumId) : await db.from('whatsapp_numeros').insert(payload);
+  if (res.error) { showToast('❌ ' + res.error.message); return; }
+  showToast(editingNumId ? '✅ Número atualizado!' : '✅ Número adicionado!');
+  closeNumEditor();
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONTACTS
+// ══════════════════════════════════════════════════════════════
+async function loadContacts() {
+  var res = await db.from('whatsapp_contacts').select('*').order('last_time', { ascending: false });
+  contacts = {};
+  (res.data || []).forEach(function(c) { contacts[c.phone] = c; });
+  renderContacts();
+}
+function renderContacts(f) {
+  f = f || '';
+  var list = document.getElementById('clist');
+  var keys = Object.keys(contacts).filter(function(k) {
+    return !f || (contacts[k].name || '').toLowerCase().includes(f) || k.includes(f);
+  });
+  document.getElementById('ctotal').textContent = keys.length + ' conversa' + (keys.length !== 1 ? 's' : '');
+  if (!keys.length) { list.innerHTML = '<div class="empty">Nenhuma mensagem ainda.</div>'; return; }
+  list.innerHTML = '';
+  keys.forEach(function(ph) {
+    var c = contacts[ph];
+    var t = c.last_time ? new Date(c.last_time).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    var div = document.createElement('div');
+    div.className = 'ci' + (curPhone === ph ? ' active' : '');
+    div.innerHTML =
+      '<div class="av">' + esc((c.name || ph)[0].toUpperCase()) + '</div>' +
+      '<div class="cinfo"><div class="cname">' + esc(c.name || ph) + '</div><div class="clast">' + esc(c.last_msg || '') + '</div></div>' +
+      '<div class="cmeta"><span class="ctime">' + t + '</span>' + (c.unread ? '<span class="badge">' + c.unread + '</span>' : '') + '</div>';
+    div.addEventListener('click', function() { openChat(ph); });
+    list.appendChild(div);
+  });
+}
+function filterC() { renderContacts(document.getElementById('srch').value.toLowerCase()); }
+
+// ══════════════════════════════════════════════════════════════
+// CHAT
+// ══════════════════════════════════════════════════════════════
+async function openChat(ph) {
+  curPhone = ph;
+  if (curTab !== 'chat') switchTab('chat');
+  renderContacts(document.getElementById('srch').value.toLowerCase());
+  var c = contacts[ph] || {};
+  document.getElementById('noChat').style.display = 'none';
+  var cv = document.getElementById('chatView');
+  cv.style.cssText = 'display:flex;flex:1;flex-direction:column;overflow:hidden';
+  document.getElementById('chAv').textContent   = (c.name || ph)[0].toUpperCase();
+  document.getElementById('chName').textContent = c.name || ph;
+  document.getElementById('chNum').textContent  = ph;
+  if (c.numero_id) document.getElementById('numeroSelect').value = c.numero_id;
+  if (c.unread) await db.from('whatsapp_contacts').update({ unread: 0 }).eq('phone', ph);
+  await loadMsgs(ph);
+  if (msgCh) await db.removeChannel(msgCh);
+  msgCh = db.channel('m-' + ph)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'whatsapp_messages', filter: 'phone=eq.' + ph },
+      function(payload) { appendBubble(payload.new); })
+    .subscribe();
+}
+
+async function loadMsgs(ph) {
+  var div = document.getElementById('msgsDiv');
+  div.innerHTML = '';
+  var res = await db.from('whatsapp_messages').select('*').eq('phone', ph).order('timestamp', { ascending: true });
+  if (res.error) {
+    div.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">Erro ao carregar mensagens: ' + esc(res.error.message) + '</div>';
+    return;
+  }
+  var msgs = res.data || [];
+  if (!msgs.length) {
+    div.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:12px">Nenhuma mensagem ainda.</div>';
+    return;
+  }
+  var last = '';
+  msgs.forEach(function(m) {
+    var ds = fmtDate(m.timestamp);
+    if (ds !== last) { div.insertAdjacentHTML('beforeend', '<div class="ddiv">' + ds + '</div>'); last = ds; }
+    div.insertAdjacentHTML('beforeend', buildBubble(m));
+  });
+  div.scrollTop = div.scrollHeight;
+}
+
+function appendBubble(m) {
+  var div = document.getElementById('msgsDiv');
+  div.insertAdjacentHTML('beforeend', buildBubble(m));
+  div.scrollTop = div.scrollHeight;
+}
+
+// FUNÇÃO PRINCIPAL DE RENDERIZAÇÃO — cada mensagem é independente
+function buildBubble(m) {
+  var dir  = m.direction === 'out' ? 'mout' : 'min';
+  var time = new Date(m.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  var tag  = m.auto ? '<span class="autag">AUTO</span>' : '';
+
+  // Mídia — cada mensagem tem seu próprio media_url e media_type
+  var mediaHtml = '';
+  if (m.media_url && m.media_type) {
+    var url = m.media_url;
+    var mt  = m.media_type;
+    var fname = url.split('/').pop().split('?')[0] || 'arquivo';
+    // Detectar extensão para definir type correto no source
+    var ext = fname.split('.').pop().toLowerCase();
+    if (mt === 'image') {
+      // Imagem — jpeg, png, webp
+      mediaHtml = '<a href="' + url + '" target="_blank" style="display:block"><img class="msg-img" src="' + url + '" loading="lazy" alt="Imagem" onerror="this.parentElement.outerHTML=\'<a href=\\\"\' + url + \'\\\">📷 Ver imagem</a>\'"></a>';
+    } else if (mt === 'audio') {
+      // Áudio OGG/OPUS do WhatsApp — Chrome suporta com type correto
+      var audioType = (ext === 'ogg') ? 'audio/ogg' : (ext === 'mp3' ? 'audio/mpeg' : 'audio/ogg');
+      mediaHtml = '<audio class="msg-audio" controls preload="metadata"><source src="' + url + '" type="' + audioType + '">Seu browser não suporta este áudio. <a href="' + url + '" download>Baixar</a></audio>';
+    } else if (mt === 'video') {
+      // Vídeo MP4
+      mediaHtml = '<video class="msg-video" controls preload="metadata"><source src="' + url + '" type="video/mp4">Seu browser não suporta este vídeo. <a href="' + url + '" download>Baixar</a></video>';
+    } else {
+      // Documento
+      mediaHtml = '<a class="msg-doc" href="' + url + '" target="_blank" download><span style="font-size:22px">📄</span><span class="doc-name">' + esc(fname) + '</span></a>';
+    }
+  }
+
+  // Botões interativos
+  var btnsHtml = '';
+  if (m.buttons && m.buttons.length) {
+    btnsHtml = '<div class="btn-preview-wrap">';
+    m.buttons.forEach(function(b) { btnsHtml += '<div class="btn-preview">🔘 ' + esc(b.title) + '</div>'; });
+    btnsHtml += '</div>';
+  }
+
+  var textPart = (m.text && m.text.trim()) ? esc(m.text) : '';
+
+  return '<div class="mg ' + dir + '"><div class="mb">' +
+    mediaHtml + textPart + tag + btnsHtml +
+    '<span class="mt">' + time + '</span>' +
+    '</div></div>';
+}
+
+// ══════════════════════════════════════════════════════════════
+// GRAVAÇÃO DE ÁUDIO
+// ══════════════════════════════════════════════════════════════
+var mediaRecorder = null;
+var recChunks = [];
+var recInterval = null;
+var recSeconds = 0;
+
+async function toggleRecord() {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    // Parar gravação
+    mediaRecorder.stop();
+  } else {
+    // Iniciar gravação
+    if (!curPhone) { showToast('Selecione um contato primeiro'); return; }
+    try {
+      var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      recChunks = [];
+      recSeconds = 0;
+
+      // Tentar webm/opus primeiro (Chrome), fallback para ogg
+      var mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/ogg;codecs=opus';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/webm';
+        }
+      }
+
+      mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
+
+      mediaRecorder.ondataavailable = function(e) {
+        if (e.data.size > 0) recChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async function() {
+        // Parar timer e UI
+        clearInterval(recInterval);
+        var btn = document.getElementById('recBtn');
+        btn.classList.remove('recording');
+        btn.title = 'Gravar áudio';
+        document.getElementById('recTimer').textContent = '0:00';
+
+        // Parar stream do microfone
+        stream.getTracks().forEach(function(t) { t.stop(); });
+
+        if (recChunks.length === 0) return;
+
+        // Criar arquivo de áudio
+        var ext = mimeType.includes('webm') ? 'webm' : 'ogg';
+        var cleanMime = mimeType.split(';')[0];
+        var blob = new Blob(recChunks, { type: cleanMime });
+        var file = new File([blob], 'audio_' + Date.now() + '.' + ext, { type: cleanMime });
+
+        // Mostrar preview e selecionar arquivo
+        selectedFile = file;
+        document.getElementById('mpIcon').textContent = '🎤';
+        document.getElementById('mpName').textContent = 'Áudio gravado (' + recSeconds + 's)';
+        document.getElementById('mpSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+        document.getElementById('mediaPrev').style.display = 'flex';
+        recChunks = [];
+      };
+
+      mediaRecorder.start(100); // coleta dados a cada 100ms
+
+      // UI gravando
+      var btn = document.getElementById('recBtn');
+      btn.classList.add('recording');
+      btn.title = 'Parar gravação';
+
+      // Timer
+      recInterval = setInterval(function() {
+        recSeconds++;
+        var m = Math.floor(recSeconds / 60);
+        var s = recSeconds % 60;
+        document.getElementById('recTimer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+        // Máx 5 minutos
+        if (recSeconds >= 300) { mediaRecorder.stop(); }
+      }, 1000);
+
+    } catch(e) {
+      showToast('❌ Microfone não disponível: ' + e.message);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENVIO DE MENSAGEM
+// ══════════════════════════════════════════════════════════════
+function onFileSelected(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+  selectedFile = file;
+  var icons = { image: '🖼️', audio: '🎤', video: '🎥' };
+  var mcat = file.type.split('/')[0];
+  document.getElementById('mpIcon').textContent = icons[mcat] || '📄';
+  document.getElementById('mpName').textContent = file.name;
+  document.getElementById('mpSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('mediaPrev').style.display = 'flex';
+  e.target.value = '';
+}
+
+function cancelMedia() {
+  selectedFile = null;
+  document.getElementById('mediaPrev').style.display = 'none';
+}
+
+async function uploadMedia(file) {
+  var mcat = file.type.split('/')[0];
+  var ext = file.name.split('.').pop() || 'bin';
+  var fileName = curPhone + '_' + Date.now() + '.' + ext;
+  var buf = await file.arrayBuffer();
+  var resp = await fetch(SURL + '/storage/v1/object/whatsapp/' + fileName, {
+    method: 'POST',
+    headers: { apikey: SKEY, Authorization: 'Bearer ' + SKEY, 'Content-Type': file.type },
+    body: buf
+  });
+  if (!resp.ok) return null;
+  return { url: SURL + '/storage/v1/object/public/whatsapp/' + fileName, type: mcat };
+}
+
+async function sendMsg() {
+  if (!curPhone) { showToast('Selecione um contato'); return; }
+  var inp = document.getElementById('msgIn');
+  var text = inp.value.trim();
+  if (!text && !selectedFile) return;
+
+  var numId = document.getElementById('numeroSelect').value;
+  var num = numeros.find(function(n) { return n.id === numId; });
+
+  var media_url = null, media_type = null;
+  if (selectedFile) {
+    showToast('⏳ Enviando arquivo...');
+    var uploaded = await uploadMedia(selectedFile);
+    if (!uploaded) { showToast('❌ Falha no upload'); return; }
+    media_url = uploaded.url;
+    media_type = uploaded.type;
+    cancelMedia();
+  }
+
+  inp.value = ''; rsz(inp);
+
+  // Salvar no Supabase
+  var msgData = { phone: curPhone, text: text || '', direction: 'out', auto: false };
+  if (media_url) { msgData.media_url = media_url; msgData.media_type = media_type; }
+  var r1 = await db.from('whatsapp_messages').insert(msgData);
+  if (r1.error) { showToast('❌ Erro ao salvar: ' + r1.error.message); return; }
+
+  var lastLabel = media_type ? ({ image: '🖼️ Imagem', audio: '🎤 Áudio', video: '🎥 Vídeo' }[media_type] || '📄 Arquivo') : ('✓ ' + text);
+  await db.from('whatsapp_contacts').upsert({ phone: curPhone, name: (contacts[curPhone] || {}).name || curPhone, last_msg: lastLabel, last_time: Date.now(), unread: 0 }, { onConflict: 'phone' });
+  loadContacts();
+
+  if (cfg.webhook) {
+    try {
+      var h = { 'Content-Type': 'application/json' };
+      if (cfg.token) h['Authorization'] = cfg.token;
+      await fetch(cfg.webhook, { method: 'POST', headers: h, body: JSON.stringify({
+        phone: curPhone, message: text || '', type: 'manual',
+        media_url: media_url, media_type: media_type,
+        phoneNumberId: num ? num.phone_number_id : null,
+        accessToken: num ? num.access_token : null
+      })});
+    } catch(e) { showToast('⚠️ n8n offline — msg salva'); }
+  }
+}
+
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg(); } }
+function rsz(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 110) + 'px'; }
+
+// ══════════════════════════════════════════════════════════════
+// AUTOMAÇÕES
+// ══════════════════════════════════════════════════════════════
+async function loadAutos() {
+  var res = await db.from('whatsapp_automacoes').select('*').order('created_at', { ascending: true });
+  if (res.error) { showToast('Erro ao carregar automações'); return; }
+  autos = res.data || [];
+  renderAutos();
+}
+
+var GLABELS = { palavra: '🔤 Palavra-chave', qualquer: '📨 Qualquer msg', novo_contato: '👤 Novo contato', horario: '🕐 Fora horário', botao_clicado: '🖱 Botão clicado' };
+
+function renderAutos() {
+  var list = document.getElementById('autoList');
+  if (!autos.length) { list.innerHTML = '<div class="panel-empty">Nenhuma automação.<br>Clique em "+ Nova Automação".</div>'; return; }
+  list.innerHTML = '';
+  autos.forEach(function(a) {
+    var trig = '';
+    if (a.gatilho === 'palavra')       trig = 'Palavras: <strong>' + esc(a.palavras || '') + '</strong>';
+    if (a.gatilho === 'qualquer')      trig = 'Dispara em <strong>toda mensagem</strong>';
+    if (a.gatilho === 'novo_contato')  trig = 'Dispara no <strong>primeiro contato</strong>';
+    if (a.gatilho === 'horario')       trig = 'Fora: <strong>' + a.hora_ini + 'h–' + a.hora_fim + 'h</strong>';
+    if (a.gatilho === 'botao_clicado') trig = 'Botão ID: <strong>' + esc(a.botao_id || '') + '</strong>';
+    var numLabel = a.numero_id ? ((numeros.find(function(n) { return n.id === a.numero_id; }) || {}).apelido || '?') : 'Todos';
+    var btns = a.botoes || [];
+    var btnsHtml = btns.length ? '<div class="acard-btns">' + btns.map(function(b) { return '<span class="acard-btn-pill">🔘 ' + esc(b.title) + '</span>'; }).join('') + '</div>' : '';
+    var card = document.createElement('div');
+    card.className = 'acard' + (a.ativo ? '' : ' disabled');
+    card.innerHTML =
+      '<div class="acard-head">' +
+        '<div class="aname">' + esc(a.nome) + '</div>' +
+        '<span class="gtag ' + a.gatilho + '">' + (GLABELS[a.gatilho] || a.gatilho) + '</span>' +
+        '<span class="tipo-tag ' + a.tipo_msg + '">' + (a.tipo_msg === 'botoes' ? '🔘 Botões' : '📝 Texto') + '</span>' +
+        '<button class="toggle' + (a.ativo ? ' on' : '') + '"></button>' +
+      '</div>' +
+      '<div class="acard-body">' +
+        '<div class="acard-trigger">' + trig + ' · 📲 <strong>' + esc(numLabel) + '</strong></div>' +
+        '<div class="acard-resp">' + esc(a.resposta) + '</div>' + btnsHtml +
+      '</div>' +
+      '<div class="acard-foot"></div>';
+    card.querySelector('.toggle').addEventListener('click', (function(id, ativo) { return function() { toggleAuto(id, !ativo); }; })(a.id, a.ativo));
+    var foot = card.querySelector('.acard-foot');
+    var be = document.createElement('button'); be.className = 'btn-edit'; be.textContent = '✏️ Editar';
+    be.addEventListener('click', (function(id) { return function() { openAutoEditor(id); }; })(a.id)); foot.appendChild(be);
+    var bd = document.createElement('button'); bd.className = 'btn-del'; bd.textContent = '🗑 Excluir';
+    bd.addEventListener('click', (function(id) { return function() { deleteAuto(id); }; })(a.id)); foot.appendChild(bd);
+    list.appendChild(card);
+  });
+}
+
+async function toggleAuto(id, ativo) { await db.from('whatsapp_automacoes').update({ ativo: ativo }).eq('id', id); showToast(ativo ? '✅ Ativada' : '⏸ Pausada'); }
+async function deleteAuto(id) { if (!confirm('Excluir?')) return; await db.from('whatsapp_automacoes').delete().eq('id', id); showToast('🗑 Excluída'); }
+
+function openAutoEditor(id) {
+  editingAutoId = id; btnRowCount = 0;
+  document.getElementById('autoTitle').textContent = id ? 'Editar Automação' : 'Nova Automação';
+  var a = id ? autos.find(function(x) { return x.id === id; }) : null;
+  document.getElementById('edNome').value     = a ? a.nome : '';
+  document.getElementById('edNumero').value   = a ? (a.numero_id || '') : '';
+  document.getElementById('edGatilho').value  = a ? a.gatilho : 'palavra';
+  document.getElementById('edPalavras').value = a ? (a.palavras || '') : '';
+  document.getElementById('edHIni').value     = a ? (a.hora_ini != null ? a.hora_ini : '') : '';
+  document.getElementById('edHFim').value     = a ? (a.hora_fim != null ? a.hora_fim : '') : '';
+  document.getElementById('edBotaoId').value  = a ? (a.botao_id || '') : '';
+  document.getElementById('edTipo').value     = a ? a.tipo_msg : 'texto';
+  document.getElementById('edResposta').value = a ? a.resposta : '';
+  document.getElementById('edAtivo').checked  = a ? a.ativo : true;
+  document.getElementById('btnRows').innerHTML = '';
+  (a && a.botoes ? a.botoes : []).forEach(function(b) { addBtnRow(b); });
+  onGatilho(); onTipo();
+  document.getElementById('autoOverlay').classList.add('open');
+}
+function closeAutoEditor() { document.getElementById('autoOverlay').classList.remove('open'); }
+function onGatilho() {
+  var g = document.getElementById('edGatilho').value;
+  document.getElementById('fPalavras').className = 'fg' + (g === 'palavra' ? '' : ' hidden');
+  document.getElementById('fHorario').className  = 'row2' + (g === 'horario' ? '' : ' hidden');
+  document.getElementById('fBotaoId').className  = 'fg' + (g === 'botao_clicado' ? '' : ' hidden');
+}
+function onTipo() { document.getElementById('secBotoes').className = document.getElementById('edTipo').value === 'botoes' ? '' : 'hidden'; }
+function addBtnRow(data) {
+  var rows = document.getElementById('btnRows');
+  if (rows.children.length >= 3) { showToast('Máx. 3 botões'); return; }
+  btnRowCount++;
+  var n = btnRowCount;
+  var div = document.createElement('div'); div.className = 'btn-row'; div.id = 'brow-' + n;
+  div.innerHTML = '<div class="btn-row-head"><span class="btn-row-num">Botão ' + (rows.children.length + 1) + '</span><button class="btn-row-del" type="button">✕</button></div>' +
+    '<div class="row2"><div class="fg"><label>Título (max 20)</label><input type="text" id="bt-' + n + '" maxlength="20" placeholder="💰 Preços" value="' + esc(data ? data.title || '' : '') + '"></div>' +
+    '<div class="fg"><label>ID</label><input type="text" id="bi-' + n + '" placeholder="btn_preco" value="' + esc(data ? data.id || '' : '') + '"></div></div>';
+  div.querySelector('.btn-row-del').addEventListener('click', function() { removeBtnRow(n); });
+  rows.appendChild(div);
+  updateAddBtn();
+}
+function removeBtnRow(n) { var el = document.getElementById('brow-' + n); if (el) el.remove(); updateAddBtn(); document.querySelectorAll('.btn-row-num').forEach(function(el, i) { el.textContent = 'Botão ' + (i + 1); }); }
+function updateAddBtn() { document.getElementById('addBtnRowBtn').style.display = document.getElementById('btnRows').children.length >= 3 ? 'none' : 'block'; }
+function getBotoes() {
+  var rows = document.getElementById('btnRows').children, btns = [];
+  for (var i = 0; i < rows.length; i++) {
+    var id = rows[i].querySelector('[id^="bi-"]').value.trim();
+    var title = rows[i].querySelector('[id^="bt-"]').value.trim();
+    if (id && title) btns.push({ id: id, title: title });
+  }
+  return btns;
+}
+async function saveAuto() {
+  var nome    = document.getElementById('edNome').value.trim();
+  var gatilho = document.getElementById('edGatilho').value;
+  var resposta = document.getElementById('edResposta').value.trim();
+  var tipo_msg = document.getElementById('edTipo').value;
+  if (!nome)     { showToast('❌ Informe o nome'); return; }
+  if (!resposta) { showToast('❌ Informe a resposta'); return; }
+  var botoes = null;
+  if (tipo_msg === 'botoes') { botoes = getBotoes(); if (!botoes.length) { showToast('❌ Adicione ao menos 1 botão'); return; } }
+  var payload = { nome: nome, numero_id: document.getElementById('edNumero').value || null, gatilho: gatilho,
+    palavras: gatilho === 'palavra' ? document.getElementById('edPalavras').value.trim() : null,
+    hora_ini: gatilho === 'horario' ? parseInt(document.getElementById('edHIni').value) : null,
+    hora_fim: gatilho === 'horario' ? parseInt(document.getElementById('edHFim').value) : null,
+    botao_id: gatilho === 'botao_clicado' ? document.getElementById('edBotaoId').value.trim() : null,
+    tipo_msg: tipo_msg, resposta: resposta, botoes: botoes, ativo: document.getElementById('edAtivo').checked };
+  var res = editingAutoId ? await db.from('whatsapp_automacoes').update(payload).eq('id', editingAutoId) : await db.from('whatsapp_automacoes').insert(payload);
+  if (res.error) { showToast('❌ ' + res.error.message); return; }
+  showToast(editingAutoId ? '✅ Atualizada!' : '✅ Criada!');
+  closeAutoEditor();
+}
+
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+function openCfg() { document.getElementById('cfgWh').value = cfg.webhook || ''; document.getElementById('cfgTk').value = cfg.token || ''; document.getElementById('cfgOverlay').classList.add('open'); }
+function closeCfg() { document.getElementById('cfgOverlay').classList.remove('open'); }
+function saveCfg() { cfg = { webhook: document.getElementById('cfgWh').value.trim(), token: document.getElementById('cfgTk').value.trim() }; localStorage.setItem('wpanel_cfg', JSON.stringify(cfg)); closeCfg(); showToast('✅ Salvo!'); }
+
+// ══════════════════════════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════════════════════════
+function showToast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 3000); }
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>'); }
+function fmtDate(ts) { var d = new Date(ts); return d.toLocaleDateString('pt-BR') === new Date().toLocaleDateString('pt-BR') ? 'Hoje' : d.toLocaleDateString('pt-BR'); }
+
+init();
+</script>
+</body>
+</html>
