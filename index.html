@@ -692,15 +692,14 @@ async function toggleRecord() {
       recSeconds = 0;
 
       // Tentar webm/opus primeiro (Chrome), fallback para ogg
-      // Meta aceita: audio/ogg, audio/mpeg, audio/aac, audio/amr — NÃO aceita audio/webm
-      // Testar em ordem de compatibilidade com a Meta
+      // Chrome só suporta audio/webm — vamos gravar em webm e converter o mime para ogg no upload
       var mimeType = '';
       var candidates = [
         'audio/ogg;codecs=opus',
         'audio/ogg',
-        'audio/mp4',
-        'audio/mpeg',
-        'audio/aac'
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4'
       ];
       for (var i = 0; i < candidates.length; i++) {
         if (MediaRecorder.isTypeSupported(candidates[i])) {
@@ -708,7 +707,7 @@ async function toggleRecord() {
           break;
         }
       }
-      if (!mimeType) { showToast('❌ Seu browser não suporta gravação de áudio compatível com WhatsApp'); return; }
+      if (!mimeType) { showToast('❌ Seu browser não suporta gravação de áudio'); return; }
 
       mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
 
@@ -730,11 +729,13 @@ async function toggleRecord() {
         if (recChunks.length === 0) return;
 
         // Criar arquivo de áudio
+        // Forçar mime audio/ogg para compatibilidade com WhatsApp
+        // Chrome grava em webm mas o conteúdo opus é compatível com ogg
         var cleanMime = mimeType.split(';')[0];
-        var extMap = { 'audio/ogg': 'ogg', 'audio/mp4': 'm4a', 'audio/mpeg': 'mp3', 'audio/aac': 'aac' };
-        var ext = extMap[cleanMime] || 'ogg';
-        var blob = new Blob(recChunks, { type: cleanMime });
-        var file = new File([blob], 'audio_' + Date.now() + '.' + ext, { type: cleanMime });
+        var forceMime = 'audio/ogg';
+        var ext = 'ogg';
+        var blob = new Blob(recChunks, { type: forceMime });
+        var file = new File([blob], 'audio_' + Date.now() + '.' + ext, { type: forceMime });
 
         // Mostrar preview e selecionar arquivo
         selectedFile = file;
@@ -791,16 +792,27 @@ function cancelMedia() {
 
 async function uploadMedia(file) {
   var mcat = file.type.split('/')[0];
+  // Para áudio, sempre forçar ogg para compatibilidade com WhatsApp
+  var uploadMime = file.type;
   var ext = file.name.split('.').pop() || 'bin';
+  if (mcat === 'audio') {
+    uploadMime = 'audio/ogg';
+    ext = 'ogg';
+  }
   var fileName = curPhone + '_' + Date.now() + '.' + ext;
   var buf = await file.arrayBuffer();
   var resp = await fetch(SURL + '/storage/v1/object/whatsapp/' + fileName, {
     method: 'POST',
-    headers: { apikey: SKEY, Authorization: 'Bearer ' + SKEY, 'Content-Type': file.type },
+    headers: {
+      apikey: SKEY,
+      Authorization: 'Bearer ' + SKEY,
+      'Content-Type': uploadMime,
+      'x-upsert': 'true'
+    },
     body: buf
   });
-  if (!resp.ok) return null;
-  return { url: SURL + '/storage/v1/object/public/whatsapp/' + fileName, type: mcat };
+  if (!resp.ok) { console.error('Upload failed:', await resp.text()); return null; }
+  return { url: SURL + '/storage/v1/object/public/whatsapp/' + fileName, type: mcat, mime: uploadMime };
 }
 
 async function sendMsg() {
