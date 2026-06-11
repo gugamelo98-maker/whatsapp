@@ -316,6 +316,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
         <option value="novo_contato">👤 Novo contato</option>
         <option value="horario">🕐 Fora de horário</option>
         <option value="botao_clicado">🖱 Botão clicado</option>
+        <option value="resposta_apos_automacao">🔁 Resposta após automação</option>
       </select>
     </div>
     <div class="fg hidden" id="fPalavras"><label>Palavras-chave (separadas por vírgula)</label><input type="text" id="edPalavras" placeholder="oi, olá, bom dia"></div>
@@ -325,6 +326,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
       <span class="hint" style="grid-column:span 2">Ex: início 18, fim 8 → dispara das 18h às 8h</span>
     </div>
     <div class="fg hidden" id="fBotaoId"><label>ID do botão</label><input type="text" id="edBotaoId" placeholder="btn_preco"></div>
+    <div class="fg hidden" id="fAutoAnterior"><label>Automação anterior (que gerou a pergunta)</label><select id="edAutoAnterior"><option value="">Selecione...</option></select></div>
     <div class="fg"><label>Tipo de resposta</label>
       <select id="edTipo" onchange="onTipo()">
         <option value="texto">📝 Texto simples</option>
@@ -873,7 +875,7 @@ async function loadAutos() {
   renderAutos();
 }
 
-var GLABELS = { palavra: '🔤 Palavra-chave', qualquer: '📨 Qualquer msg', novo_contato: '👤 Novo contato', horario: '🕐 Fora horário', botao_clicado: '🖱 Botão clicado' };
+var GLABELS = { palavra: '🔤 Palavra-chave', qualquer: '📨 Qualquer msg', novo_contato: '👤 Novo contato', horario: '🕐 Fora horário', botao_clicado: '🖱 Botão clicado', resposta_apos_automacao: '🔁 Resp. após auto' };
 
 function renderAutos() {
   var list = document.getElementById('autoList');
@@ -927,6 +929,7 @@ function openAutoEditor(id) {
   document.getElementById('edHIni').value     = a ? (a.hora_ini != null ? a.hora_ini : '') : '';
   document.getElementById('edHFim').value     = a ? (a.hora_fim != null ? a.hora_fim : '') : '';
   document.getElementById('edBotaoId').value  = a ? (a.botao_id || '') : '';
+  document.getElementById('edAutoAnterior').value = a ? (a.auto_anterior_id || '') : '';
   document.getElementById('edTipo').value     = a ? a.tipo_msg : 'texto';
   document.getElementById('edResposta').value = a ? a.resposta : '';
   document.getElementById('edAtivo').checked  = a ? a.ativo : true;
@@ -938,9 +941,22 @@ function openAutoEditor(id) {
 function closeAutoEditor() { document.getElementById('autoOverlay').classList.remove('open'); }
 function onGatilho() {
   var g = document.getElementById('edGatilho').value;
-  document.getElementById('fPalavras').className = 'fg' + (g === 'palavra' ? '' : ' hidden');
-  document.getElementById('fHorario').className  = 'row2' + (g === 'horario' ? '' : ' hidden');
-  document.getElementById('fBotaoId').className  = 'fg' + (g === 'botao_clicado' ? '' : ' hidden');
+  document.getElementById('fPalavras').className    = 'fg'   + (g === 'palavra' ? '' : ' hidden');
+  document.getElementById('fHorario').className     = 'row2' + (g === 'horario' ? '' : ' hidden');
+  document.getElementById('fBotaoId').className     = 'fg'   + (g === 'botao_clicado' ? '' : ' hidden');
+  document.getElementById('fAutoAnterior').className = 'fg'  + (g === 'resposta_apos_automacao' ? '' : ' hidden');
+  // Popular select de automações anteriores
+  if (g === 'resposta_apos_automacao') {
+    var sel = document.getElementById('edAutoAnterior');
+    var cur = sel.value;
+    sel.innerHTML = '<option value="">Selecione a automação anterior...</option>';
+    autos.forEach(function(a) {
+      var o = document.createElement('option');
+      o.value = a.id; o.textContent = a.nome + ' (' + a.gatilho + ')';
+      sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+  }
 }
 function onTipo() { document.getElementById('secBotoes').className = document.getElementById('edTipo').value === 'botoes' ? '' : 'hidden'; }
 function addBtnRow(data) {
@@ -963,7 +979,10 @@ function getBotoes() {
   for (var i = 0; i < rows.length; i++) {
     var id = rows[i].querySelector('[id^="bi-"]').value.trim();
     var title = rows[i].querySelector('[id^="bt-"]').value.trim();
-    if (id && title) btns.push({ id: id, title: title });
+    if (!title) continue;
+    // Gerar ID automático se não preenchido
+    if (!id) id = 'btn_' + title.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 20) + '_' + (i+1);
+    btns.push({ id: id, title: title });
   }
   return btns;
 }
@@ -981,6 +1000,7 @@ async function saveAuto() {
     hora_ini: gatilho === 'horario' ? parseInt(document.getElementById('edHIni').value) : null,
     hora_fim: gatilho === 'horario' ? parseInt(document.getElementById('edHFim').value) : null,
     botao_id: gatilho === 'botao_clicado' ? document.getElementById('edBotaoId').value.trim() : null,
+    auto_anterior_id: gatilho === 'resposta_apos_automacao' ? (document.getElementById('edAutoAnterior').value || null) : null,
     tipo_msg: tipo_msg, resposta: resposta, botoes: botoes, ativo: document.getElementById('edAtivo').checked };
   var res = editingAutoId ? await db.from('whatsapp_automacoes').update(payload).eq('id', editingAutoId) : await db.from('whatsapp_automacoes').insert(payload);
   if (res.error) { showToast('❌ ' + res.error.message); return; }
